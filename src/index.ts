@@ -9,12 +9,14 @@ try {
   console.log(`Hello ${nameToGreet}!`);
   const time = new Date().toTimeString();
   core.setOutput('time', time);
-  // Get the JSON webhook payload for the event that triggered the workflow
-  const payload = JSON.stringify(github.context.payload, undefined, 2);
-  console.log(`The event payload: ${payload}`);
 
+  // Get the JSON webhook payload for the event that triggered the workflow
+  // const payload = JSON.stringify(github.context.payload, undefined, 2);
+  // console.log(`The event payload: ${payload}`);
+
+  const sourcePath = core.getInput('source-path');
   exec(
-    'npx cloc --include-lang=TypeScript,JavaScript --json static/ld/reducers/',
+    'npx cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}',
     (err: Error, stdout: string, stderr: string) => {
       if (err) {
         throw err;
