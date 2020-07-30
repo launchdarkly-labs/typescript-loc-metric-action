@@ -3593,7 +3593,7 @@ try {
     // const payload = JSON.stringify(github.context.payload, undefined, 2);
     // console.log(`The event payload: ${payload}`);
     const sourcePath = core.getInput('source-path');
-    exec('npx cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}', (err, stdout, stderr) => {
+    exec(`npx cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`, (err, stdout, stderr) => {
         if (err) {
             throw err;
         }
