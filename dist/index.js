@@ -3598,7 +3598,7 @@ try {
             throw err;
         }
         if (stderr) {
-            throw new Error(`cloc failed: ${stderr}`);
+            console.log(`cloc stderr: ${stderr}`);
         }
         console.log(`cloc output: ${stdout}`);
     });
