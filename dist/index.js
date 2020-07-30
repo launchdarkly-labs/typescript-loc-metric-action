@@ -3598,9 +3598,10 @@ try {
             throw err;
         }
         if (stderr) {
-            console.log(`cloc stderr: ${stderr}`);
+            throw new Error(stderr);
         }
-        console.log(`cloc output: ${stdout}`);
+        const stats = JSON.parse(stdout);
+        console.log(`cloc output: ${JSON.stringify(stats, null, 2)}`);
     });
 }
 catch (error) {
