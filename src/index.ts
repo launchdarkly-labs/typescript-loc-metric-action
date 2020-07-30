@@ -16,7 +16,7 @@ try {
 
   const sourcePath = core.getInput('source-path');
   exec(
-    `npx cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`,
+    `npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`,
     (err: Error, stdout: string, stderr: string) => {
       if (err) {
         throw err;
