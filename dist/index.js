@@ -210,6 +210,13 @@ exports.getApiBaseUrl = getApiBaseUrl;
 
 /***/ }),
 
+/***/ 129:
+/***/ (function(module) {
+
+module.exports = require("child_process");
+
+/***/ }),
+
 /***/ 141:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
@@ -3568,10 +3575,12 @@ module.exports.Collection = Hook.Collection
 /***/ }),
 
 /***/ 526:
-/***/ (function(__unusedmodule, __unusedexports, __webpack_require__) {
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
 
+Object.defineProperty(exports, "__esModule", { value: true });
+const { exec } = __webpack_require__(129);
 const core = __webpack_require__(470);
 const github = __webpack_require__(469);
 try {
@@ -3583,6 +3592,15 @@ try {
     // Get the JSON webhook payload for the event that triggered the workflow
     const payload = JSON.stringify(github.context.payload, undefined, 2);
     console.log(`The event payload: ${payload}`);
+    exec('npx cloc --include-lang=TypeScript,JavaScript --json static/ld/reducers/', (err, stdout, stderr) => {
+        if (err) {
+            throw err;
+        }
+        if (stderr) {
+            throw new Error(`cloc failed: ${stderr}`);
+        }
+        console.log(`cloc output: ${stdout}`);
+    });
 }
 catch (error) {
     core.setFailed(error.message);

@@ -7,5 +7,5 @@
     "strict": true /* Enable all strict type-checking options. */,
     "typeRoots": ["node_modules/@types"]
   },
-  "exclude": ["node_modules", "dist", "lib"]
+  "exclude": ["node_modules", "dist", "lib", "example"]
 }
