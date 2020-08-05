@@ -6863,8 +6863,8 @@ function submitRatioToDatadog(ratio, context, datadogMetric, datadogApiKey) {
                 responseType: 'json',
             });
             console.dir({
-                request: data,
-                response: response.body,
+                request: JSON.stringify(data, null, 2),
+                response: JSON.stringify(response.body, null, 2),
             });
         }
         catch (error) {
