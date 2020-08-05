@@ -43,7 +43,7 @@ async function submitRatioToDatadog(
           {
             host: 'gonfalon',
             metric: datadogMetric,
-            type: 'loc-ratio',
+            type: 'count',
             points: [[pushedAt, ratio]],
           },
         ],
