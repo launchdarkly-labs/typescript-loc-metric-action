@@ -4,7 +4,6 @@ inputs:
   source-path: 
     description: 'The source directory'
     required: true
-outputs:
 runs:
   using: 'node12'
   main: 'dist/index.js'
