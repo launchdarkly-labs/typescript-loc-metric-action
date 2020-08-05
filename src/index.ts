@@ -27,8 +27,9 @@ try {
       }
 
       const stats = JSON.parse(stdout);
+      const ratio = stats.TypeScript.code / stats.JavaScript.code;
 
-      console.log(`cloc output: ${JSON.stringify(stats, null, 2)}`);
+      console.log(ratio);
     },
   );
 } catch (error) {
