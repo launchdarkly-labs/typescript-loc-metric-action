@@ -6847,20 +6847,25 @@ function submitRatioToDatadog(ratio, context, datadogMetric, datadogApiKey) {
         try {
             const params = new URLSearchParams({ api_key: datadogApiKey });
             const pushedAt = context.payload['pushed_at'];
+            const data = {
+                series: [
+                    {
+                        host: 'gonfalon',
+                        metric: datadogMetric,
+                        // type: 'count',
+                        type: 'gauge',
+                        points: [[pushedAt, ratio]],
+                    },
+                ],
+            };
             const response = yield got_1.default.post(`https://api.datadoghq.com/api/v1/series?${params.toString()}`, {
-                json: {
-                    series: [
-                        {
-                            host: 'gonfalon',
-                            metric: datadogMetric,
-                            type: 'count',
-                            points: [[pushedAt, ratio]],
-                        },
-                    ],
-                },
+                json: data,
                 responseType: 'json',
             });
-            console.log(response.body);
+            console.dir({
+                request: data,
+                response: response.body,
+            });
         }
         catch (error) {
             throw error;
