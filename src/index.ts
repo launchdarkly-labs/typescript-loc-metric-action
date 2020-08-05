@@ -3,6 +3,12 @@ import * as core from '@actions/core';
 import * as github from '@actions/github';
 
 type ClocOutput = {
+  JavaScript: {
+    nFiles: number;
+    blank: number;
+    comment: number;
+    code: number;
+  };
   TypeScript: {
     nFiles: number;
     blank: number;
@@ -26,7 +32,7 @@ try {
 
   const sourcePath = core.getInput('source-path');
   exec(
-    `npx --quiet cloc --include-lang=TypeScript --json ${sourcePath}`,
+    `npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`,
     (err: ExecException | null, stdout: string, stderr: string) => {
       if (err) {
         throw err;

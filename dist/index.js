@@ -3590,7 +3590,7 @@ try {
     const time = new Date().toTimeString();
     core.setOutput('time', time);
     const sourcePath = core.getInput('source-path');
-    child_process_1.exec(`npx --quiet cloc --include-lang=TypeScript --json ${sourcePath}`, (err, stdout, stderr) => {
+    child_process_1.exec(`npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`, (err, stdout, stderr) => {
         if (err) {
             throw err;
         }
