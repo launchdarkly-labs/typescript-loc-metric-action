@@ -3584,11 +3584,6 @@ const child_process_1 = __webpack_require__(129);
 const core = __webpack_require__(470);
 const github = __webpack_require__(469);
 try {
-    // `who-to-greet` input defined in action metadata file
-    const nameToGreet = core.getInput('who-to-greet');
-    console.log(`Hello ${nameToGreet}!`);
-    const time = new Date().toTimeString();
-    core.setOutput('time', time);
     const sourcePath = core.getInput('source-path');
     child_process_1.exec(`npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`, (err, stdout, stderr) => {
         if (err) {

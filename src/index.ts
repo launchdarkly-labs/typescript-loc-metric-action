@@ -24,13 +24,8 @@ type ClocOutput = {
 };
 
 try {
-  // `who-to-greet` input defined in action metadata file
-  const nameToGreet = core.getInput('who-to-greet');
-  console.log(`Hello ${nameToGreet}!`);
-  const time = new Date().toTimeString();
-  core.setOutput('time', time);
-
   const sourcePath = core.getInput('source-path');
+
   exec(
     `npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`,
     (err: ExecException | null, stdout: string, stderr: string) => {
