@@ -37,7 +37,7 @@ async function submitRatioToDatadog(
   try {
     const params = new URLSearchParams({ api_key: datadogApiKey });
     const pushedAt = context.payload['pushed_at'];
-    await got.post(`https://api.datadoghq.com/api/v1/series?${params.toString()}`, {
+    const response = await got.post(`https://api.datadoghq.com/api/v1/series?${params.toString()}`, {
       json: {
         series: [
           {
@@ -50,6 +50,8 @@ async function submitRatioToDatadog(
       },
       responseType: 'json',
     });
+
+    console.log(response.body);
   } catch (error) {
     throw error;
   }

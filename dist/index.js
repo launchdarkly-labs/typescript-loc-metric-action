@@ -6847,7 +6847,7 @@ function submitRatioToDatadog(ratio, context, datadogMetric, datadogApiKey) {
         try {
             const params = new URLSearchParams({ api_key: datadogApiKey });
             const pushedAt = context.payload['pushed_at'];
-            yield got_1.default.post(`https://api.datadoghq.com/api/v1/series?${params.toString()}`, {
+            const response = yield got_1.default.post(`https://api.datadoghq.com/api/v1/series?${params.toString()}`, {
                 json: {
                     series: [
                         {
@@ -6860,6 +6860,7 @@ function submitRatioToDatadog(ratio, context, datadogMetric, datadogApiKey) {
                 },
                 responseType: 'json',
             });
+            console.log(response.body);
         }
         catch (error) {
             throw error;
