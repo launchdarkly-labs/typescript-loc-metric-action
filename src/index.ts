@@ -34,8 +34,7 @@ async function submitRatioToDatadog(ratio: number, datadogMetric: string, datado
         {
           host: 'gonfalon',
           metric: datadogMetric,
-          // type: 'count',
-          type: 'gauge',
+          type: 'count',
           points: [[Date.now(), ratio]],
         },
       ],
