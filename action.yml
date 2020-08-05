@@ -4,6 +4,12 @@ inputs:
   source-path: 
     description: 'The source directory'
     required: true
+  datadog-metric:
+    description: 'The Datadog metric name to submit to'
+    required: true
+  datadog-api-key:
+    description: 'The Datadog API key for the account to submit to'
+    required: true
 runs:
   using: 'node12'
   main: 'dist/index.js'
