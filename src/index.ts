@@ -2,8 +2,6 @@ import { promisify } from 'util';
 import { exec as execCb } from 'child_process';
 import got from 'got';
 import * as core from '@actions/core';
-import * as github from '@actions/github';
-import { Context as GithubContext } from '@actions/github/lib/context';
 
 const exec = promisify(execCb);
 
@@ -28,15 +26,9 @@ type ClocOutput = {
   };
 };
 
-async function submitRatioToDatadog(
-  ratio: number,
-  context: GithubContext,
-  datadogMetric: string,
-  datadogApiKey: string,
-) {
+async function submitRatioToDatadog(ratio: number, datadogMetric: string, datadogApiKey: string) {
   try {
     const params = new URLSearchParams({ api_key: datadogApiKey });
-    const pushedAt = context.payload['pushed_at'];
     const data = {
       series: [
         {
@@ -44,7 +36,7 @@ async function submitRatioToDatadog(
           metric: datadogMetric,
           // type: 'count',
           type: 'gauge',
-          points: [[pushedAt, ratio]],
+          points: [[Date.now(), ratio]],
         },
       ],
     };
@@ -54,7 +46,6 @@ async function submitRatioToDatadog(
     });
 
     console.dir({
-      payload: JSON.stringify(context.payload, null, 2),
       request: JSON.stringify(data, null, 2),
       response: JSON.stringify(response.body, null, 2),
     });
@@ -74,7 +65,7 @@ async function reportRatio(sourcePath: string, datadogMetric: string, datadogApi
     const stats = JSON.parse(stdout) as ClocOutput;
     const ratio = stats.TypeScript.code / stats.SUM.code;
 
-    await submitRatioToDatadog(ratio, github.context, datadogMetric, datadogApiKey);
+    await submitRatioToDatadog(ratio, datadogMetric, datadogApiKey);
   } catch (error) {
     core.setFailed(error.message);
   }
