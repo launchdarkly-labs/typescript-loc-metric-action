@@ -54,6 +54,7 @@ async function submitRatioToDatadog(
     });
 
     console.dir({
+      payload: JSON.stringify(context.payload, null, 2),
       request: JSON.stringify(data, null, 2),
       response: JSON.stringify(response.body, null, 2),
     });
