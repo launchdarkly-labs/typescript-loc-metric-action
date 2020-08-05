@@ -3580,7 +3580,7 @@ module.exports.Collection = Hook.Collection
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const { exec } = __webpack_require__(129);
+const child_process_1 = __webpack_require__(129);
 const core = __webpack_require__(470);
 const github = __webpack_require__(469);
 try {
@@ -3589,20 +3589,19 @@ try {
     console.log(`Hello ${nameToGreet}!`);
     const time = new Date().toTimeString();
     core.setOutput('time', time);
-    // Get the JSON webhook payload for the event that triggered the workflow
-    // const payload = JSON.stringify(github.context.payload, undefined, 2);
-    // console.log(`The event payload: ${payload}`);
     const sourcePath = core.getInput('source-path');
-    exec(`npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`, (err, stdout, stderr) => {
+    child_process_1.exec(`npx --quiet cloc --include-lang=TypeScript --json ${sourcePath}`, (err, stdout, stderr) => {
         if (err) {
             throw err;
         }
         if (stderr) {
             throw new Error(stderr);
         }
+        const payload = github.context.payload;
         const stats = JSON.parse(stdout);
-        const ratio = stats.TypeScript.code / stats.JavaScript.code;
+        const ratio = stats.TypeScript.code / stats.SUM.code;
         console.log(ratio);
+        console.log(JSON.stringify(payload, null, 2));
     });
 }
 catch (error) {

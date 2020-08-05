@@ -1,9 +1,9 @@
 on: [push]
 
 jobs:
-  hello_world_job:
+  compute_typescript_ratio_job:
     runs-on: ubuntu-latest
-    name: A job to say hello
+    name: A job to compute the ratio of Typescript to JavaScript lines of code
     steps:
       # To use this repository's private action,
       # you must check out the repository

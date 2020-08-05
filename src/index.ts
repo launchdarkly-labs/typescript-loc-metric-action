@@ -1,7 +1,21 @@
-import { Writable, Readable, Stream, Pipe } from 'stream';
-const { exec } = require('child_process');
-const core = require('@actions/core');
-const github = require('@actions/github');
+import { exec, ExecException } from 'child_process';
+import * as core from '@actions/core';
+import * as github from '@actions/github';
+
+type ClocOutput = {
+  TypeScript: {
+    nFiles: number;
+    blank: number;
+    comment: number;
+    code: number;
+  };
+  SUM: {
+    blank: number;
+    comment: number;
+    code: number;
+    nFiles: number;
+  };
+};
 
 try {
   // `who-to-greet` input defined in action metadata file
@@ -10,14 +24,10 @@ try {
   const time = new Date().toTimeString();
   core.setOutput('time', time);
 
-  // Get the JSON webhook payload for the event that triggered the workflow
-  // const payload = JSON.stringify(github.context.payload, undefined, 2);
-  // console.log(`The event payload: ${payload}`);
-
   const sourcePath = core.getInput('source-path');
   exec(
-    `npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`,
-    (err: Error, stdout: string, stderr: string) => {
+    `npx --quiet cloc --include-lang=TypeScript --json ${sourcePath}`,
+    (err: ExecException | null, stdout: string, stderr: string) => {
       if (err) {
         throw err;
       }
@@ -26,10 +36,13 @@ try {
         throw new Error(stderr);
       }
 
-      const stats = JSON.parse(stdout);
-      const ratio = stats.TypeScript.code / stats.JavaScript.code;
+      const payload = github.context.payload;
+
+      const stats = JSON.parse(stdout) as ClocOutput;
+      const ratio = stats.TypeScript.code / stats.SUM.code;
 
       console.log(ratio);
+      console.log(JSON.stringify(payload, null, 2));
     },
   );
 } catch (error) {
