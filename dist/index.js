@@ -3601,7 +3601,8 @@ try {
             throw new Error(stderr);
         }
         const stats = JSON.parse(stdout);
-        console.log(`cloc output: ${JSON.stringify(stats, null, 2)}`);
+        const ratio = stats.TypeScript.code / stats.JavaScript.code;
+        console.log(ratio);
     });
 }
 catch (error) {
