@@ -6853,7 +6853,7 @@ function submitRatioToDatadog(ratio, context, datadogMetric, datadogApiKey) {
                         {
                             host: 'gonfalon',
                             metric: datadogMetric,
-                            type: 'loc-ratio',
+                            type: 'count',
                             points: [[pushedAt, ratio]],
                         },
                     ],
