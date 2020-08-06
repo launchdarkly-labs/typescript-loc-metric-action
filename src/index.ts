@@ -4,6 +4,8 @@ import got from 'got';
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 
+type WebhookPayload = typeof github.context.payload;
+
 const exec = promisify(execCb);
 
 type ClocOutput = {
@@ -27,18 +29,16 @@ type ClocOutput = {
   };
 };
 
-async function submitRatioToDatadog(ratio: number, datadogMetric: string, datadogApiKey: string) {
+async function submitRatioToDatadog(ratio: number, timestamp: number, datadogMetric: string, datadogApiKey: string) {
   try {
     const params = new URLSearchParams({ api_key: datadogApiKey });
-    const headCommit = github.context.payload.head_commit;
-    const timestampOfHeadCommit = Math.floor(new Date(headCommit.timestamp).getTime() / 1000);
     const data = {
       series: [
         {
           host: 'gonfalon',
           metric: datadogMetric,
           type: 'gauge',
-          points: [[timestampOfHeadCommit, ratio]],
+          points: [[timestamp, ratio]],
         },
       ],
     };
@@ -57,7 +57,12 @@ async function submitRatioToDatadog(ratio: number, datadogMetric: string, datado
   }
 }
 
-async function reportRatio(sourcePath: string, datadogMetric: string, datadogApiKey: string) {
+async function reportRatio(
+  sourcePath: string,
+  webhookPayload: WebhookPayload,
+  datadogMetric: string,
+  datadogApiKey: string,
+) {
   try {
     const { stdout, stderr } = await exec(`npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`);
 
@@ -68,7 +73,10 @@ async function reportRatio(sourcePath: string, datadogMetric: string, datadogApi
     const stats = JSON.parse(stdout) as ClocOutput;
     const ratio = stats.TypeScript.code / stats.SUM.code;
 
-    await submitRatioToDatadog(ratio, datadogMetric, datadogApiKey);
+    const headCommit = webhookPayload.head_commit;
+    const timestampOfHeadCommit = Math.floor(new Date(headCommit.timestamp).getTime() / 1000);
+
+    await submitRatioToDatadog(ratio, timestampOfHeadCommit, datadogMetric, datadogApiKey);
   } catch (error) {
     core.setFailed(error.message);
   }
@@ -77,5 +85,6 @@ async function reportRatio(sourcePath: string, datadogMetric: string, datadogApi
 const sourcePath = core.getInput('source-path');
 const datadogMetric = core.getInput('datadog-metric');
 const datadogApiKey = core.getInput('datadog-api-key');
+const webhookPayload = github.context.payload;
 
-reportRatio(sourcePath, datadogMetric, datadogApiKey);
+reportRatio(sourcePath, webhookPayload, datadogMetric, datadogApiKey);
