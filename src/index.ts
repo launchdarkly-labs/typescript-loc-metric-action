@@ -32,25 +32,18 @@ type ClocOutput = {
 async function submitRatioToDatadog(ratio: number, timestamp: number, datadogMetric: string, datadogApiKey: string) {
   try {
     const params = new URLSearchParams({ api_key: datadogApiKey });
-    const data = {
-      series: [
-        {
-          host: 'gonfalon',
-          metric: datadogMetric,
-          type: 'gauge',
-          points: [[timestamp, ratio]],
-        },
-      ],
-    };
-    const response = await got.post(`https://api.datadoghq.com/api/v1/series?${params.toString()}`, {
-      json: data,
+    await got.post(`https://api.datadoghq.com/api/v1/series?${params.toString()}`, {
+      json: {
+        series: [
+          {
+            host: 'gonfalon',
+            metric: datadogMetric,
+            type: 'gauge',
+            points: [[timestamp, ratio]],
+          },
+        ],
+      },
       responseType: 'json',
-    });
-
-    console.dir({
-      payload: JSON.stringify(github.context.payload, null, 2),
-      request: JSON.stringify(data, null, 2),
-      response: JSON.stringify(response.body, null, 2),
     });
   } catch (error) {
     throw error;
