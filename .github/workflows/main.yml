@@ -1,3 +1,5 @@
+# Note: This workflow is intended to be used for testing the action itself (on this repo).
+
 on:
   push:
     branches:
