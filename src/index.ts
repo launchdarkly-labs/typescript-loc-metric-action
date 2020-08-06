@@ -2,6 +2,7 @@ import { promisify } from 'util';
 import { exec as execCb } from 'child_process';
 import got from 'got';
 import * as core from '@actions/core';
+import * as github from '@actions/github';
 
 const exec = promisify(execCb);
 
@@ -45,6 +46,7 @@ async function submitRatioToDatadog(ratio: number, datadogMetric: string, datado
     });
 
     console.dir({
+      payload: JSON.stringify(github.context.payload, null, 2),
       request: JSON.stringify(data, null, 2),
       response: JSON.stringify(response.body, null, 2),
     });
