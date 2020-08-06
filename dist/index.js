@@ -6846,8 +6846,8 @@ function submitRatioToDatadog(ratio, datadogMetric, datadogApiKey) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const params = new URLSearchParams({ api_key: datadogApiKey });
-            const commits = github.context.payload.commits;
-            const timestampOfHeadCommit = Math.floor(new Date(commits[commits.length - 1].timestamp).getTime() / 1000);
+            const headCommit = github.context.payload.head_commit;
+            const timestampOfHeadCommit = Math.floor(new Date(headCommit.timestamp).getTime() / 1000);
             const data = {
                 series: [
                     {

@@ -30,8 +30,8 @@ type ClocOutput = {
 async function submitRatioToDatadog(ratio: number, datadogMetric: string, datadogApiKey: string) {
   try {
     const params = new URLSearchParams({ api_key: datadogApiKey });
-    const commits = github.context.payload.commits;
-    const timestampOfHeadCommit = Math.floor(new Date(commits[commits.length - 1].timestamp).getTime() / 1000);
+    const headCommit = github.context.payload.head_commit;
+    const timestampOfHeadCommit = Math.floor(new Date(headCommit.timestamp).getTime() / 1000);
     const data = {
       series: [
         {
