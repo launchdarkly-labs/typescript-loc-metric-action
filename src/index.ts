@@ -70,6 +70,8 @@ async function reportRatio(
     const timestampOfHeadCommit = Math.floor(new Date(headCommit.timestamp).getTime() / 1000);
 
     await submitRatioToDatadog(ratio, timestampOfHeadCommit, datadogMetric, datadogApiKey);
+
+    console.log(`TypeScript is ${Math.round(ratio * 100)}% of the code in ${sourcePath}`);
   } catch (error) {
     core.setFailed(error.message);
   }

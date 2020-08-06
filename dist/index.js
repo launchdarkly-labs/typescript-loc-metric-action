@@ -6846,24 +6846,18 @@ function submitRatioToDatadog(ratio, timestamp, datadogMetric, datadogApiKey) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const params = new URLSearchParams({ api_key: datadogApiKey });
-            const data = {
-                series: [
-                    {
-                        host: 'gonfalon',
-                        metric: datadogMetric,
-                        type: 'gauge',
-                        points: [[timestamp, ratio]],
-                    },
-                ],
-            };
-            const response = yield got_1.default.post(`https://api.datadoghq.com/api/v1/series?${params.toString()}`, {
-                json: data,
+            yield got_1.default.post(`https://api.datadoghq.com/api/v1/series?${params.toString()}`, {
+                json: {
+                    series: [
+                        {
+                            host: 'gonfalon',
+                            metric: datadogMetric,
+                            type: 'gauge',
+                            points: [[timestamp, ratio]],
+                        },
+                    ],
+                },
                 responseType: 'json',
-            });
-            console.dir({
-                payload: JSON.stringify(github.context.payload, null, 2),
-                request: JSON.stringify(data, null, 2),
-                response: JSON.stringify(response.body, null, 2),
             });
         }
         catch (error) {
@@ -6883,6 +6877,7 @@ function reportRatio(sourcePath, webhookPayload, datadogMetric, datadogApiKey) {
             const headCommit = webhookPayload.head_commit;
             const timestampOfHeadCommit = Math.floor(new Date(headCommit.timestamp).getTime() / 1000);
             yield submitRatioToDatadog(ratio, timestampOfHeadCommit, datadogMetric, datadogApiKey);
+            console.log(`TypeScript is ${Math.round(ratio * 100)}% of the code in ${sourcePath}`);
         }
         catch (error) {
             core.setFailed(error.message);
