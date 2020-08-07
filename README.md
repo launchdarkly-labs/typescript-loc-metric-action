@@ -1,4 +1,4 @@
-# TypeScript line-of-code metric action
+# TypeScript metric action
 
 This action computes the ratio of TypeScript to JavaScript lines of code for a directory and submits it
 to a Datadog metric.
