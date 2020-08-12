@@ -29,7 +29,13 @@ type ClocOutput = {
   };
 };
 
-async function submitRatioToDatadog(ratio: number, timestamp: number, datadogMetric: string, datadogApiKey: string) {
+async function submitRatioToDatadog(
+  ratio: number,
+  timestamp: number,
+  author: string,
+  datadogMetric: string,
+  datadogApiKey: string,
+) {
   try {
     const params = new URLSearchParams({ api_key: datadogApiKey });
     await got.post(`https://api.datadoghq.com/api/v1/series?${params.toString()}`, {
@@ -40,6 +46,7 @@ async function submitRatioToDatadog(ratio: number, timestamp: number, datadogMet
             metric: datadogMetric,
             type: 'gauge',
             points: [[timestamp, ratio]],
+            tags: [`author:${author}`],
           },
         ],
       },
@@ -65,11 +72,11 @@ async function reportRatio(
 
     const stats = JSON.parse(stdout) as ClocOutput;
     const ratio = stats.TypeScript.code / stats.SUM.code;
-
     const headCommit = webhookPayload.head_commit;
     const timestampOfHeadCommit = Math.floor(new Date(headCommit.timestamp).getTime() / 1000);
+    const author = headCommit.author.email;
 
-    await submitRatioToDatadog(ratio, timestampOfHeadCommit, datadogMetric, datadogApiKey);
+    await submitRatioToDatadog(ratio, timestampOfHeadCommit, author, datadogMetric, datadogApiKey);
 
     console.log(`TypeScript is ${Math.round(ratio * 100)}% of the code in ${sourcePath}`);
   } catch (error) {

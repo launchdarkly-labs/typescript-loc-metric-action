@@ -6842,7 +6842,7 @@ const got_1 = __webpack_require__(77);
 const core = __webpack_require__(470);
 const github = __webpack_require__(469);
 const exec = util_1.promisify(child_process_1.exec);
-function submitRatioToDatadog(ratio, timestamp, datadogMetric, datadogApiKey) {
+function submitRatioToDatadog(ratio, timestamp, author, datadogMetric, datadogApiKey) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const params = new URLSearchParams({ api_key: datadogApiKey });
@@ -6854,6 +6854,7 @@ function submitRatioToDatadog(ratio, timestamp, datadogMetric, datadogApiKey) {
                             metric: datadogMetric,
                             type: 'gauge',
                             points: [[timestamp, ratio]],
+                            tags: [`author:${author}`],
                         },
                     ],
                 },
@@ -6876,7 +6877,8 @@ function reportRatio(sourcePath, webhookPayload, datadogMetric, datadogApiKey) {
             const ratio = stats.TypeScript.code / stats.SUM.code;
             const headCommit = webhookPayload.head_commit;
             const timestampOfHeadCommit = Math.floor(new Date(headCommit.timestamp).getTime() / 1000);
-            yield submitRatioToDatadog(ratio, timestampOfHeadCommit, datadogMetric, datadogApiKey);
+            const author = headCommit.author.email;
+            yield submitRatioToDatadog(ratio, timestampOfHeadCommit, author, datadogMetric, datadogApiKey);
             console.log(`TypeScript is ${Math.round(ratio * 100)}% of the code in ${sourcePath}`);
         }
         catch (error) {
