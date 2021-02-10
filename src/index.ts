@@ -3,6 +3,7 @@ import { exec as execCb } from 'child_process';
 import got from 'got';
 import * as core from '@actions/core';
 import * as github from '@actions/github';
+import { findFileCountOfJSConversionsToTS } from './utils/helperUtilMethods';
 
 type WebhookPayload = typeof github.context.payload;
 
@@ -29,12 +30,13 @@ type ClocOutput = {
   };
 };
 
-async function submitRatioToDatadog(
-  ratio: number,
+async function submitToDataDog(
+  dataPoint: number,
   timestamp: number,
   author: string,
   datadogMetric: string,
   datadogApiKey: string,
+  seriesType: string,
 ) {
   try {
     const params = new URLSearchParams({ api_key: datadogApiKey });
@@ -44,8 +46,8 @@ async function submitRatioToDatadog(
           {
             host: 'gonfalon',
             metric: datadogMetric,
-            type: 'gauge',
-            points: [[timestamp, ratio]],
+            type: seriesType,
+            points: [[timestamp, dataPoint]],
             tags: [`author:${author}`],
           },
         ],
@@ -54,6 +56,33 @@ async function submitRatioToDatadog(
     });
   } catch (error) {
     throw error;
+  }
+}
+
+async function reportCountOfFilesConverted(
+  sourcePath: string,
+  webhookPayload: WebhookPayload,
+  datadogMetric: string,
+  datadogApiKey: string,
+) {
+  try {
+    const { stdout, stderr } = await exec(`npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`);
+
+    if (stderr) {
+      throw new Error(stderr);
+    }
+
+    const headCommit = webhookPayload.head_commit;
+    const timestampOfHeadCommit = Math.floor(new Date(headCommit.timestamp).getTime() / 1000);
+    const author = headCommit.author.email;
+    const filesAdded = headCommit.added;
+    const filesRemoved = headCommit.removed;
+    const count = findFileCountOfJSConversionsToTS(filesAdded, filesRemoved);
+    await submitToDataDog(count, timestampOfHeadCommit, author, datadogMetric, datadogApiKey, count);
+
+    console.log(`User converted ${count}% of JS files to Typescript ${sourcePath}`);
+  } catch (error) {
+    core.setFailed(error.message);
   }
 }
 
@@ -76,7 +105,7 @@ async function reportRatio(
     const timestampOfHeadCommit = Math.floor(new Date(headCommit.timestamp).getTime() / 1000);
     const author = headCommit.author.email;
 
-    await submitRatioToDatadog(ratio, timestampOfHeadCommit, author, datadogMetric, datadogApiKey);
+    await submitToDataDog(ratio, timestampOfHeadCommit, author, datadogMetric, datadogApiKey, 'gauge');
 
     console.log(`TypeScript is ${Math.round(ratio * 100)}% of the code in ${sourcePath}`);
   } catch (error) {
@@ -90,3 +119,4 @@ const datadogApiKey = core.getInput('datadog-api-key');
 const webhookPayload = github.context.payload;
 
 reportRatio(sourcePath, webhookPayload, datadogMetric, datadogApiKey);
+reportCountOfFilesConverted(sourcePath, webhookPayload, datadogMetric, datadogApiKey);
