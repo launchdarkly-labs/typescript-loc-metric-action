@@ -1,4 +1,4 @@
-import { findFileCountOfJSConversionsToTS } from './helperUtilMethods';
+import { findFileCountOfJSConversionsToTS } from './helperMethods';
 
 describe('helperMethods', () => {
   it('should return the correct count', () => {
