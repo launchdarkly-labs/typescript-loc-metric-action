@@ -4,7 +4,10 @@ inputs:
   source-path: 
     description: 'The source directory'
     required: true
-  datadog-metric:
+  datadog-typescript-progress-metric:
+    description: 'The Datadog metric name to submit to'
+    required: true
+  datadog-files-converted-metric:
     description: 'The Datadog metric name to submit to'
     required: true
   datadog-api-key:
