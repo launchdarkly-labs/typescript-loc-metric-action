@@ -78,7 +78,7 @@ async function reportCountOfFilesConverted(
     const filesAdded = headCommit.added;
     const filesRemoved = headCommit.removed;
     const count = findFileCountOfJSConversionsToTS(filesAdded, filesRemoved);
-    await submitToDataDog(count, timestampOfHeadCommit, author, datadogMetric, datadogApiKey, count);
+    await submitToDataDog(count, timestampOfHeadCommit, author, datadogMetric, datadogApiKey, 'count');
 
     console.log(`User converted ${count}% of JS files to Typescript ${sourcePath}`);
   } catch (error) {
