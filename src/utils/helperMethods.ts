@@ -4,11 +4,8 @@ export function findFileCountOfJSConversionsToTS(filesAdded: string[], filesRemo
     const splitFileName = d.split('.');
     filesRemoved.forEach((e) => {
       const splitRemovedFileName = e.split('.');
-      if (
-        splitRemovedFileName[splitRemovedFileName.length - 1] === 'js' &&
-        (splitFileName[splitFileName.length - 1] === 'ts' || splitFileName[splitFileName.length - 1] === 'tsx')
-      ) {
-        if (splitRemovedFileName[splitRemovedFileName.length - 2] === splitFileName[splitFileName.length - 2]) {
+      if (splitRemovedFileName[1] === 'js' && (splitFileName[1] === 'ts' || splitFileName[1] === 'tsx')) {
+        if (splitRemovedFileName[0] === splitFileName[0]) {
           count++;
         }
       }
