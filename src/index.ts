@@ -114,9 +114,10 @@ async function reportRatio(
 }
 
 const sourcePath = core.getInput('source-path');
-const datadogMetric = core.getInput('datadog-metric');
+const datadogProgressMetric = core.getInput('datadog-typescript-progress-metric');
+const datadogFilesConvertedMetric = core.getInput('datadog-files-converted-metric');
 const datadogApiKey = core.getInput('datadog-api-key');
 const webhookPayload = github.context.payload;
 
-reportRatio(sourcePath, webhookPayload, datadogMetric, datadogApiKey);
-reportCountOfFilesConverted(sourcePath, webhookPayload, datadogMetric, datadogApiKey);
+reportRatio(sourcePath, webhookPayload, datadogProgressMetric, datadogApiKey);
+reportCountOfFilesConverted(sourcePath, webhookPayload, datadogFilesConvertedMetric, datadogApiKey);
