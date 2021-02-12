@@ -77,11 +77,13 @@ async function reportCountOfFilesConverted(
   console.log(webhookPayload.repository?.commits_url);
 
   try {
-    const res = await fetch(webhookPayload.repository?.commits_url);
+    const res = await fetch(
+      `https://api.github.com/repos/launchdarkly/gonfalon/commits/${webhookPayload.head_commit.id}`,
+    );
 
     if (res.status >= 400) {
-      console.log(res)
-      throw new Error("Bad response from server");
+      console.log(res);
+      throw new Error('Bad response from server');
     }
 
     const user = await res.json();

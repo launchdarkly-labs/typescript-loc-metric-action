@@ -7033,15 +7033,15 @@ function getData(url = '') {
     });
 }
 function reportCountOfFilesConverted(sourcePath, webhookPayload, datadogMetric, datadogApiKey) {
-    var _a, _b;
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         //  https://api.github.com/orgs/launchdarkly/repos/{owner}/gonfalon/commits/{ref}
         console.log((_a = webhookPayload.repository) === null || _a === void 0 ? void 0 : _a.commits_url);
         try {
-            const res = yield cross_fetch_1.default((_b = webhookPayload.repository) === null || _b === void 0 ? void 0 : _b.commits_url);
+            const res = yield cross_fetch_1.default(`https://api.github.com/repos/launchdarkly/gonfalon/commits/${webhookPayload.head_commit.id}`);
             if (res.status >= 400) {
                 console.log(res);
-                throw new Error("Bad response from server");
+                throw new Error('Bad response from server');
             }
             const user = yield res.json();
             console.log(user);
