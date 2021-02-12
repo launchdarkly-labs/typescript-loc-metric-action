@@ -59,25 +59,31 @@ async function submitToDataDog(
   }
 }
 
+async function getData(url = '') {
+  // Default options are marked with *
+  const response = await fetch(url, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+  });
+  console.log(response.json());
+  return response.json(); // parses JSON response into native JavaScript objects
+}
+
 async function reportCountOfFilesConverted(
   sourcePath: string,
   webhookPayload: WebhookPayload,
   datadogMetric: string,
   datadogApiKey: string,
 ) {
-  try {
-    //  https://api.github.com/orgs/launchdarkly/repos/{owner}/gonfalon/commits/{ref}
-    fetch(webhookPayload.repository?.commits_url)
-      .then((response) => {
-        console.log(response.blob(), response.json());
-        return response.json();
-      })
-      .then((json) => console.log(json));
-  } catch (error) {
-    console.log(error);
-    console.log('error processing request from github');
-    return;
-  }
+  //  https://api.github.com/orgs/launchdarkly/repos/{owner}/gonfalon/commits/{ref}
+  console.log(webhookPayload.repository?.commits_url);
+
+  getData(webhookPayload.repository?.commits_url)
+    .then((data) => console.log(data))
+    .catch((error) => console.log(error));
+
   try {
     const { stdout, stderr } = await exec(`npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`);
 

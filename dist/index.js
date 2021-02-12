@@ -7051,24 +7051,27 @@ function submitToDataDog(dataPoint, timestamp, author, datadogMetric, datadogApi
         }
     });
 }
-function reportCountOfFilesConverted(sourcePath, webhookPayload, datadogMetric, datadogApiKey) {
-    var _a;
+function getData(url = '') {
     return __awaiter(this, void 0, void 0, function* () {
-        try {
-            //  https://api.github.com/orgs/launchdarkly/repos/{owner}/gonfalon/commits/{ref}
-            const request = new Request((_a = webhookPayload.repository) === null || _a === void 0 ? void 0 : _a.commits_url);
-            fetch(request)
-                .then((response) => {
-                console.log(response.blob(), response.json());
-                return response.json();
-            })
-                .then((json) => console.log(json));
-        }
-        catch (error) {
-            console.log(error);
-            console.log('error processing request from github');
-            return;
-        }
+        // Default options are marked with *
+        const response = yield fetch(url, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            referrerPolicy: 'no-referrer',
+        });
+        console.log(response.json());
+        return response.json(); // parses JSON response into native JavaScript objects
+    });
+}
+function reportCountOfFilesConverted(sourcePath, webhookPayload, datadogMetric, datadogApiKey) {
+    var _a, _b;
+    return __awaiter(this, void 0, void 0, function* () {
+        //  https://api.github.com/orgs/launchdarkly/repos/{owner}/gonfalon/commits/{ref}
+        console.log((_a = webhookPayload.repository) === null || _a === void 0 ? void 0 : _a.commits_url);
+        getData((_b = webhookPayload.repository) === null || _b === void 0 ? void 0 : _b.commits_url)
+            .then((data) => console.log(data))
+            .catch((error) => console.log(error));
         try {
             const { stdout, stderr } = yield exec(`npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`);
             if (stderr) {
