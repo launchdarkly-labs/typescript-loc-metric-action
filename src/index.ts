@@ -62,12 +62,7 @@ async function submitToDataDog(
 
 async function getData(url = '') {
   // Default options are marked with *
-  const response = await fetch(url, {
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-  });
+  const response = await fetch(url);
   console.log(response.json());
   return response.json(); // parses JSON response into native JavaScript objects
 }
@@ -81,30 +76,45 @@ async function reportCountOfFilesConverted(
   //  https://api.github.com/orgs/launchdarkly/repos/{owner}/gonfalon/commits/{ref}
   console.log(webhookPayload.repository?.commits_url);
 
-  getData(webhookPayload.repository?.commits_url)
-    .then((data) => console.log(data))
-    .catch((error) => console.log(error));
-
   try {
-    const { stdout, stderr } = await exec(`npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`);
+    const res = await fetch(webhookPayload.repository?.commits_url);
 
-    if (stderr) {
-      throw new Error(stderr);
+    if (res.status >= 400) {
+      console.log(res)
+      throw new Error("Bad response from server");
     }
 
-    const headCommit = webhookPayload.head_commit;
-    const timestampOfHeadCommit = Math.floor(new Date(headCommit.timestamp).getTime() / 1000);
-    const author = headCommit.author.email;
-    const filesAdded = headCommit.added;
-    const filesRemoved = headCommit.removed;
-    console.log(webhookPayload);
-    const count = findFileCountOfJSConversionsToTS(filesAdded, filesRemoved);
-    await submitToDataDog(count, timestampOfHeadCommit, author, datadogMetric, datadogApiKey, 'count');
+    const user = await res.json();
 
-    console.log(`User converted ${count}% of JS files to Typescript ${sourcePath}`);
-  } catch (error) {
-    core.setFailed(error.message);
+    console.log(user);
+  } catch (err) {
+    console.error(err);
   }
+
+  // getData(webhookPayload.repository?.commits_url)
+  //   .then((data) => console.log(data))
+  //   .catch((error) => console.log(error));
+  //
+  // try {
+  //   const { stdout, stderr } = await exec(`npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`);
+  //
+  //   if (stderr) {
+  //     throw new Error(stderr);
+  //   }
+  //
+  //   const headCommit = webhookPayload.head_commit;
+  //   const timestampOfHeadCommit = Math.floor(new Date(headCommit.timestamp).getTime() / 1000);
+  //   const author = headCommit.author.email;
+  //   const filesAdded = headCommit.added;
+  //   const filesRemoved = headCommit.removed;
+  //   console.log(webhookPayload);
+  //   const count = findFileCountOfJSConversionsToTS(filesAdded, filesRemoved);
+  //   await submitToDataDog(count, timestampOfHeadCommit, author, datadogMetric, datadogApiKey, 'count');
+  //
+  //   console.log(`User converted ${count}% of JS files to Typescript ${sourcePath}`);
+  // } catch (error) {
+  //   core.setFailed(error.message);
+  // }
 }
 
 async function reportRatio(

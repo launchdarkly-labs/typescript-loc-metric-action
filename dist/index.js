@@ -3403,33 +3403,6 @@ module.exports = require("assert");
 
 /***/ }),
 
-/***/ 377:
-/***/ (function(__unusedmodule, exports) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.findFileCountOfJSConversionsToTS = void 0;
-function findFileCountOfJSConversionsToTS(filesAdded, filesRemoved) {
-    let count = 0;
-    filesAdded.forEach((d) => {
-        const splitFileName = d.split('.');
-        filesRemoved.forEach((e) => {
-            const splitRemovedFileName = e.split('.');
-            if (splitRemovedFileName[1] === 'js' && (splitFileName[1] === 'ts' || splitFileName[1] === 'tsx')) {
-                if (splitRemovedFileName[0] === splitFileName[0]) {
-                    count++;
-                }
-            }
-        });
-    });
-    return count;
-}
-exports.findFileCountOfJSConversionsToTS = findFileCountOfJSConversionsToTS;
-
-
-/***/ }),
-
 /***/ 385:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
@@ -7025,7 +6998,6 @@ const child_process_1 = __webpack_require__(129);
 const got_1 = __webpack_require__(77);
 const core = __webpack_require__(470);
 const github = __webpack_require__(469);
-const helperMethods_1 = __webpack_require__(377);
 const cross_fetch_1 = __webpack_require__(612);
 const exec = util_1.promisify(child_process_1.exec);
 function submitToDataDog(dataPoint, timestamp, author, datadogMetric, datadogApiKey, seriesType) {
@@ -7055,12 +7027,7 @@ function submitToDataDog(dataPoint, timestamp, author, datadogMetric, datadogApi
 function getData(url = '') {
     return __awaiter(this, void 0, void 0, function* () {
         // Default options are marked with *
-        const response = yield cross_fetch_1.default(url, {
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            referrerPolicy: 'no-referrer',
-        });
+        const response = yield cross_fetch_1.default(url);
         console.log(response.json());
         return response.json(); // parses JSON response into native JavaScript objects
     });
@@ -7070,26 +7037,17 @@ function reportCountOfFilesConverted(sourcePath, webhookPayload, datadogMetric, 
     return __awaiter(this, void 0, void 0, function* () {
         //  https://api.github.com/orgs/launchdarkly/repos/{owner}/gonfalon/commits/{ref}
         console.log((_a = webhookPayload.repository) === null || _a === void 0 ? void 0 : _a.commits_url);
-        getData((_b = webhookPayload.repository) === null || _b === void 0 ? void 0 : _b.commits_url)
-            .then((data) => console.log(data))
-            .catch((error) => console.log(error));
         try {
-            const { stdout, stderr } = yield exec(`npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`);
-            if (stderr) {
-                throw new Error(stderr);
+            const res = yield cross_fetch_1.default((_b = webhookPayload.repository) === null || _b === void 0 ? void 0 : _b.commits_url);
+            if (res.status >= 400) {
+                console.log(res);
+                throw new Error("Bad response from server");
             }
-            const headCommit = webhookPayload.head_commit;
-            const timestampOfHeadCommit = Math.floor(new Date(headCommit.timestamp).getTime() / 1000);
-            const author = headCommit.author.email;
-            const filesAdded = headCommit.added;
-            const filesRemoved = headCommit.removed;
-            console.log(webhookPayload);
-            const count = helperMethods_1.findFileCountOfJSConversionsToTS(filesAdded, filesRemoved);
-            yield submitToDataDog(count, timestampOfHeadCommit, author, datadogMetric, datadogApiKey, 'count');
-            console.log(`User converted ${count}% of JS files to Typescript ${sourcePath}`);
+            const user = yield res.json();
+            console.log(user);
         }
-        catch (error) {
-            core.setFailed(error.message);
+        catch (err) {
+            console.error(err);
         }
     });
 }
