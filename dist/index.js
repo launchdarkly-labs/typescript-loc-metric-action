@@ -7026,6 +7026,7 @@ const got_1 = __webpack_require__(77);
 const core = __webpack_require__(470);
 const github = __webpack_require__(469);
 const helperMethods_1 = __webpack_require__(377);
+const cross_fetch_1 = __webpack_require__(612);
 const exec = util_1.promisify(child_process_1.exec);
 function submitToDataDog(dataPoint, timestamp, author, datadogMetric, datadogApiKey, seriesType) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -7054,7 +7055,7 @@ function submitToDataDog(dataPoint, timestamp, author, datadogMetric, datadogApi
 function getData(url = '') {
     return __awaiter(this, void 0, void 0, function* () {
         // Default options are marked with *
-        const response = yield fetch(url, {
+        const response = yield cross_fetch_1.default(url, {
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -8917,6 +8918,33 @@ __exportStar(__webpack_require__(36), exports);
 /***/ (function(module) {
 
 module.exports = require("http");
+
+/***/ }),
+
+/***/ 612:
+/***/ (function(module, exports, __webpack_require__) {
+
+var nodeFetch = __webpack_require__(454)
+var realFetch = nodeFetch.default || nodeFetch
+
+var fetch = function (url, options) {
+  // Support schemaless URIs on the server for parity with the browser.
+  // Ex: //github.com/ -> https://github.com/
+  if (/^\/\//.test(url)) {
+    url = 'https:' + url
+  }
+  return realFetch.call(this, url, options)
+}
+
+module.exports = exports = fetch
+exports.fetch = fetch
+exports.Headers = nodeFetch.Headers
+exports.Request = nodeFetch.Request
+exports.Response = nodeFetch.Response
+
+// Needed for TypeScript consumers without esModuleInterop.
+exports.default = fetch
+
 
 /***/ }),
 

@@ -18,6 +18,7 @@
     "@actions/github": "4.0.0",
     "@types/jest": "26.0.20",
     "cloc": "2.5.1",
+    "cross-fetch": "3.0.6",
     "got": "11.5.1"
   },
   "devDependencies": {
