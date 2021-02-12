@@ -7063,7 +7063,7 @@ function reportCountOfFilesConverted(sourcePath, webhookPayload, datadogMetric, 
             const author = headCommit.author.email;
             const filesAdded = headCommit.added;
             const filesRemoved = headCommit.removed;
-            console.log(headCommit);
+            console.log(webhookPayload);
             const count = helperMethods_1.findFileCountOfJSConversionsToTS(filesAdded, filesRemoved);
             yield submitToDataDog(count, timestampOfHeadCommit, author, datadogMetric, datadogApiKey, 'count');
             console.log(`User converted ${count}% of JS files to Typescript ${sourcePath}`);

@@ -77,7 +77,7 @@ async function reportCountOfFilesConverted(
     const author = headCommit.author.email;
     const filesAdded = headCommit.added;
     const filesRemoved = headCommit.removed;
-    console.log(headCommit)
+    console.log(webhookPayload)
     const count = findFileCountOfJSConversionsToTS(filesAdded, filesRemoved);
     await submitToDataDog(count, timestampOfHeadCommit, author, datadogMetric, datadogApiKey, 'count');
 
