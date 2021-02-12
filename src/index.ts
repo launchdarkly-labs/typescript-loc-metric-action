@@ -67,17 +67,16 @@ async function reportCountOfFilesConverted(
 ) {
   try {
     //  https://api.github.com/orgs/launchdarkly/repos/{owner}/gonfalon/commits/{ref}
-    const request = new Request(webhookPayload.repository?.commits_url);
-    fetch(request)
+    fetch(webhookPayload.repository?.commits_url)
       .then((response) => {
         console.log(response.blob(), response.json());
         return response.json();
       })
       .then((json) => console.log(json));
   } catch (error) {
-    console.log(error)
+    console.log(error);
     console.log('error processing request from github');
-    return
+    return;
   }
   try {
     const { stdout, stderr } = await exec(`npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`);
