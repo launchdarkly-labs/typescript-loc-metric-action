@@ -5,13 +5,13 @@ inputs:
     description: 'The source directory'
     required: true
   datadog-typescript-progress-metric:
-    description: 'The Datadog metric name to submit to'
+    description: 'The Datadog metric name to submit to for typescript progress'
     required: true
   datadog-files-converted-metric:
     description: 'The Datadog metric name to submit to'
     required: true
   datadog-api-key:
-    description: 'The Datadog API key for the account to submit to'
+    description: 'The Datadog API key for the account to submit to for files converted by author'
     required: true
 runs:
   using: 'node12'
