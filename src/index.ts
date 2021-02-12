@@ -75,7 +75,9 @@ async function reportCountOfFilesConverted(
       })
       .then((json) => console.log(json));
   } catch (error) {
+    console.log(error)
     console.log('error processing request from github');
+    return
   }
   try {
     const { stdout, stderr } = await exec(`npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`);

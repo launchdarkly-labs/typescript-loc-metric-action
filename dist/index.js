@@ -7065,7 +7065,9 @@ function reportCountOfFilesConverted(sourcePath, webhookPayload, datadogMetric, 
                 .then((json) => console.log(json));
         }
         catch (error) {
+            console.log(error);
             console.log('error processing request from github');
+            return;
         }
         try {
             const { stdout, stderr } = yield exec(`npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`);
