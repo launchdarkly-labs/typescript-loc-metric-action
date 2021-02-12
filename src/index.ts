@@ -66,6 +66,18 @@ async function reportCountOfFilesConverted(
   datadogApiKey: string,
 ) {
   try {
+    //  https://api.github.com/orgs/launchdarkly/repos/{owner}/gonfalon/commits/{ref}
+    const request = new Request(webhookPayload.repository?.commits_url);
+    fetch(request)
+      .then((response) => {
+        console.log(response.blob(), response.json());
+        return response.json();
+      })
+      .then((json) => console.log(json));
+  } catch (error) {
+    console.log('error processing request from github');
+  }
+  try {
     const { stdout, stderr } = await exec(`npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`);
 
     if (stderr) {
@@ -77,7 +89,7 @@ async function reportCountOfFilesConverted(
     const author = headCommit.author.email;
     const filesAdded = headCommit.added;
     const filesRemoved = headCommit.removed;
-    console.log(webhookPayload)
+    console.log(webhookPayload);
     const count = findFileCountOfJSConversionsToTS(filesAdded, filesRemoved);
     await submitToDataDog(count, timestampOfHeadCommit, author, datadogMetric, datadogApiKey, 'count');
 

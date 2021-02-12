@@ -7052,7 +7052,21 @@ function submitToDataDog(dataPoint, timestamp, author, datadogMetric, datadogApi
     });
 }
 function reportCountOfFilesConverted(sourcePath, webhookPayload, datadogMetric, datadogApiKey) {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
+        try {
+            //  https://api.github.com/orgs/launchdarkly/repos/{owner}/gonfalon/commits/{ref}
+            const request = new Request((_a = webhookPayload.repository) === null || _a === void 0 ? void 0 : _a.commits_url);
+            fetch(request)
+                .then((response) => {
+                console.log(response.blob(), response.json());
+                return response.json();
+            })
+                .then((json) => console.log(json));
+        }
+        catch (error) {
+            console.log('error processing request from github');
+        }
         try {
             const { stdout, stderr } = yield exec(`npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`);
             if (stderr) {
