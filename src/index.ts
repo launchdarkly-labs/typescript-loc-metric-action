@@ -119,5 +119,5 @@ const datadogFilesConvertedMetric = core.getInput('datadog-files-converted-metri
 const datadogApiKey = core.getInput('datadog-api-key');
 const webhookPayload = github.context.payload;
 
-reportRatio(sourcePath, webhookPayload, datadogProgressMetric, datadogApiKey);
+// reportRatio(sourcePath, webhookPayload, datadogProgressMetric, datadogApiKey);
 reportCountOfFilesConverted(sourcePath, webhookPayload, datadogFilesConvertedMetric, datadogApiKey);
