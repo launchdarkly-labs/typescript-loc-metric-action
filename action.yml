@@ -13,6 +13,9 @@ inputs:
   datadog-api-key:
     description: 'The Datadog API key for the account to submit to'
     required: true
+  github-token:
+    description: 'Github token'
+    required: true
 runs:
   using: 'node12'
   main: 'dist/index.js'

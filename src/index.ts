@@ -60,11 +60,10 @@ async function submitToDataDog(
   }
 }
 
-async function getData(url = '') {
-  // Default options are marked with *
-  const response = await fetch(url);
+async function getData(url = '', githubToken: string) {
+  const response = await fetch(url, { headers: { Authorization: `token ${githubToken}` } });
   console.log(response.json());
-  return response.json(); // parses JSON response into native JavaScript objects
+  return response.json();
 }
 
 async function reportCountOfFilesConverted(
@@ -72,12 +71,11 @@ async function reportCountOfFilesConverted(
   webhookPayload: WebhookPayload,
   datadogMetric: string,
   datadogApiKey: string,
-  context: any,
+  githubToken: string,
 ) {
+  const response = getData(webhookPayload.head_commit.url, githubToken);
   try {
     const { stdout, stderr } = await exec(`npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`);
-    console.log('context', context);
-    console.log('webhookPayload', webhookPayload);
     if (stderr) {
       throw new Error(stderr);
     }
@@ -166,10 +164,11 @@ async function reportRatio(
 }
 
 const sourcePath = core.getInput('source-path');
+const githubToken = core.getInput('github-token');
 const datadogProgressMetric = core.getInput('datadog-typescript-progress-metric');
 const datadogFilesConvertedMetric = core.getInput('datadog-files-converted-metric');
 const datadogApiKey = core.getInput('datadog-api-key');
 const webhookPayload = github.context.payload;
 
 // reportRatio(sourcePath, webhookPayload, datadogProgressMetric, datadogApiKey);
-reportCountOfFilesConverted(sourcePath, webhookPayload, datadogFilesConvertedMetric, datadogApiKey, github.context);
+reportCountOfFilesConverted(sourcePath, webhookPayload, datadogFilesConvertedMetric, datadogApiKey, githubToken);
