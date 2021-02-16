@@ -60,9 +60,11 @@ async function submitToDataDog(
   }
 }
 
-async function getData(url = '', githubToken: string) {
+async function getData(commitId = '', githubToken: string) {
   console.log(url);
-  const response = await fetch(url, { headers: { Authorization: `token ${githubToken}` } });
+  const response = await fetch(`https://api.github.com/repos/launchdarkly/gonfalon/commits/${commitId}`, {
+    headers: { Authorization: `token ${githubToken}` },
+  });
   console.log(response.status);
   return await response.json();
 }
@@ -74,7 +76,7 @@ async function reportCountOfFilesConverted(
   datadogApiKey: string,
   githubToken: string,
 ) {
-  const response = await getData(webhookPayload.head_commit.url, githubToken);
+  const response = await getData(webhookPayload.head_commit.id, githubToken);
   console.log('response', response);
   try {
     const { stdout, stderr } = await exec(`npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`);

@@ -8524,17 +8524,19 @@ function submitToDataDog(dataPoint, timestamp, author, datadogMetric, datadogApi
         }
     });
 }
-function getData(url = '', githubToken) {
+function getData(commitId = '', githubToken) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log(url);
-        const response = yield cross_fetch_1.default(url, { headers: { Authorization: `token ${githubToken}` } });
+        const response = yield cross_fetch_1.default(`https://api.github.com/repos/launchdarkly/gonfalon/commits/${commitId}`, {
+            headers: { Authorization: `token ${githubToken}` },
+        });
         console.log(response.status);
         return yield response.json();
     });
 }
 function reportCountOfFilesConverted(sourcePath, webhookPayload, datadogMetric, datadogApiKey, githubToken) {
     return __awaiter(this, void 0, void 0, function* () {
-        const response = yield getData(webhookPayload.head_commit.url, githubToken);
+        const response = yield getData(webhookPayload.head_commit.id, githubToken);
         console.log('response', response);
         try {
             const { stdout, stderr } = yield exec(`npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`);
