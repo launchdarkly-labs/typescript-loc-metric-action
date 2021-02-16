@@ -8529,14 +8529,12 @@ function getData(commitId = '', githubToken) {
         const response = yield cross_fetch_1.default(`https://api.github.com/repos/launchdarkly/gonfalon/commits/${commitId}`, {
             headers: { Authorization: `token ${githubToken}` },
         });
-        console.log(response.status);
         return yield response.json();
     });
 }
 function reportCountOfFilesConverted(sourcePath, webhookPayload, datadogMetric, datadogApiKey, githubToken) {
     return __awaiter(this, void 0, void 0, function* () {
         const response = yield getData(webhookPayload.head_commit.id, githubToken);
-        console.log('response', response);
         try {
             const { stdout, stderr } = yield exec(`npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`);
             if (stderr) {
@@ -8590,7 +8588,7 @@ const datadogProgressMetric = core.getInput('datadog-typescript-progress-metric'
 const datadogFilesConvertedMetric = core.getInput('datadog-files-converted-metric');
 const datadogApiKey = core.getInput('datadog-api-key');
 const webhookPayload = github.context.payload;
-// reportRatio(sourcePath, webhookPayload, datadogProgressMetric, datadogApiKey);
+reportRatio(sourcePath, webhookPayload, datadogProgressMetric, datadogApiKey);
 reportCountOfFilesConverted(sourcePath, webhookPayload, datadogFilesConvertedMetric, datadogApiKey, githubToken);
 
 

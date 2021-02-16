@@ -64,7 +64,6 @@ async function getData(commitId = '', githubToken: string) {
   const response = await fetch(`https://api.github.com/repos/launchdarkly/gonfalon/commits/${commitId}`, {
     headers: { Authorization: `token ${githubToken}` },
   });
-  console.log(response.status);
   return await response.json();
 }
 
@@ -76,17 +75,16 @@ async function reportCountOfFilesConverted(
   githubToken: string,
 ) {
   const response = await getData(webhookPayload.head_commit.id, githubToken);
-  console.log('response', response);
   try {
     const { stdout, stderr } = await exec(`npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`);
     if (stderr) {
       throw new Error(stderr);
     }
-    const findRenamedFiles = response.files.filter((f) => f.previous_filename);
+    const findRenamedFiles = response.files.filter((f: { previous_filename?: string }) => f.previous_filename);
     let count = 0;
-    findRenamedFiles.forEach((d) => {
+    findRenamedFiles.forEach((d: { filename: string; previous_filename: string }) => {
       const [fileName, fileExtension] = d.filename.split('.');
-      const [prevFileName, prevFileExtension] = d.previous_filename!.split('.');
+      const [prevFileName, prevFileExtension] = d.previous_filename.split('.');
       if (fileExtension === 'ts' && prevFileExtension === 'js') {
         if (fileName === prevFileName) {
           count++;
@@ -137,5 +135,5 @@ const datadogFilesConvertedMetric = core.getInput('datadog-files-converted-metri
 const datadogApiKey = core.getInput('datadog-api-key');
 const webhookPayload = github.context.payload;
 
-// reportRatio(sourcePath, webhookPayload, datadogProgressMetric, datadogApiKey);
+reportRatio(sourcePath, webhookPayload, datadogProgressMetric, datadogApiKey);
 reportCountOfFilesConverted(sourcePath, webhookPayload, datadogFilesConvertedMetric, datadogApiKey, githubToken);
