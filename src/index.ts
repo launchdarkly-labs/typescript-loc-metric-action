@@ -62,8 +62,7 @@ async function submitToDataDog(
 
 async function getData(url = '', githubToken: string) {
   const response = await fetch(url, { headers: { Authorization: `token ${githubToken}` } });
-  console.log(response);
-  return response
+  return await response.json();
 }
 
 async function reportCountOfFilesConverted(
@@ -73,7 +72,7 @@ async function reportCountOfFilesConverted(
   datadogApiKey: string,
   githubToken: string,
 ) {
-  const response = await getData(webhookPayload.head_commit.url, githubToken)
+  const response = await getData(webhookPayload.head_commit.url, githubToken);
   console.log('response', response);
   try {
     const { stdout, stderr } = await exec(`npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`);
