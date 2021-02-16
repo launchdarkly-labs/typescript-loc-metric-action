@@ -62,6 +62,7 @@ async function submitToDataDog(
 
 async function getData(url = '', githubToken: string) {
   const response = await fetch(url, { headers: { Authorization: `token ${githubToken}` } });
+  console.log(response.blob())
   return await response.json();
 }
 
