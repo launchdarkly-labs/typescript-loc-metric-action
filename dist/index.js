@@ -8527,47 +8527,18 @@ function submitToDataDog(dataPoint, timestamp, author, datadogMetric, datadogApi
 function getData(url = '', githubToken) {
     return __awaiter(this, void 0, void 0, function* () {
         const response = yield cross_fetch_1.default(url, { headers: { Authorization: `token ${githubToken}` } });
-        console.log(response.json());
-        return response.json();
+        return yield response.json();
     });
 }
 function reportCountOfFilesConverted(sourcePath, webhookPayload, datadogMetric, datadogApiKey, githubToken) {
     return __awaiter(this, void 0, void 0, function* () {
-        const response = getData(webhookPayload.head_commit.url, githubToken);
+        const response = yield getData(webhookPayload.head_commit.url, githubToken);
+        console.log('response', response);
         try {
             const { stdout, stderr } = yield exec(`npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`);
             if (stderr) {
                 throw new Error(stderr);
             }
-            // somehow get the commit response (this is an example)
-            const response = {
-                files: [
-                    {
-                        sha: 'c1610fc7ab4918c5fb30a64dccecd057a87068b2',
-                        filename: '.github/workflows/typescript_progress.yml',
-                        status: 'modified',
-                        additions: 3,
-                        deletions: 1,
-                        changes: 4,
-                        blob_url: 'https://github.com/launchdarkly/gonfalon/blob/b3f3c6c0147dd8438a2f4c9ace42210744d4ae67/.github/workflows/typescript_progress.yml',
-                        raw_url: 'https://github.com/launchdarkly/gonfalon/raw/b3f3c6c0147dd8438a2f4c9ace42210744d4ae67/.github/workflows/typescript_progress.yml',
-                        contents_url: 'https://api.github.com/repos/launchdarkly/gonfalon/contents/.github/workflows/typescript_progress.yml?ref=b3f3c6c0147dd8438a2f4c9ace42210744d4ae67',
-                        patch: "@@ -2,6 +2,7 @@ on:\n   push:\n     branches:\n       - master\n+      - traci/testing-datadog-files-converted-to-typescript-metric\n name: Typescript progress metric\n jobs:\n   reportTypeScriptRatio:\n@@ -14,5 +15,6 @@ jobs:\n         uses: launchdarkly-labs/typescript-loc-metric-action@main\n         with:\n           source-path: './static/ld'\n-          datadog-metric: 'gonfalon.typescript.progress'\n+          datadog-typescript-progress-metric: 'gonfalon.typescript.progress'\n+          datadog-files-converted-metric: 'gonfalon.files.converted.by.author'\n           datadog-api-key: ${{ secrets.DATADOG_API_KEY }}",
-                    },
-                    {
-                        sha: '1df41cf3ed76e5f5facb687081597c93dc81a3ca',
-                        filename: 'static/ld/utils/confirmationUtils.ts',
-                        status: 'renamed',
-                        additions: 0,
-                        deletions: 0,
-                        changes: 0,
-                        blob_url: 'https://github.com/launchdarkly/gonfalon/blob/b3f3c6c0147dd8438a2f4c9ace42210744d4ae67/static/ld/utils/confirmationUtils.ts',
-                        raw_url: 'https://github.com/launchdarkly/gonfalon/raw/b3f3c6c0147dd8438a2f4c9ace42210744d4ae67/static/ld/utils/confirmationUtils.ts',
-                        contents_url: 'https://api.github.com/repos/launchdarkly/gonfalon/contents/static/ld/utils/confirmationUtils.ts?ref=b3f3c6c0147dd8438a2f4c9ace42210744d4ae67',
-                        previous_filename: 'static/ld/utils/confirmationUtils.js',
-                    },
-                ],
-            };
             const findRenamedFiles = response.files.filter((f) => f.previous_filename);
             let count = 0;
             findRenamedFiles.forEach((d) => {
@@ -8583,7 +8554,7 @@ function reportCountOfFilesConverted(sourcePath, webhookPayload, datadogMetric, 
             const timestampOfHeadCommit = Math.floor(new Date(headCommit.timestamp).getTime() / 1000);
             const author = headCommit.author.email;
             yield submitToDataDog(count, timestampOfHeadCommit, author, datadogMetric, datadogApiKey, 'count');
-            console.log(`User converted ${count}% of JS files to Typescript ${sourcePath}`);
+            console.log(`User converted ${count} JS files to Typescript ${sourcePath}`);
         }
         catch (error) {
             core.setFailed(error.message);
