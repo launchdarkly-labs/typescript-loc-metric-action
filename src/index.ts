@@ -61,7 +61,6 @@ async function submitToDataDog(
 }
 
 async function getData(commitId = '', githubToken: string) {
-  console.log(url);
   const response = await fetch(`https://api.github.com/repos/launchdarkly/gonfalon/commits/${commitId}`, {
     headers: { Authorization: `token ${githubToken}` },
   });

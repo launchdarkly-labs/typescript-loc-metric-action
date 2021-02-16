@@ -8526,7 +8526,6 @@ function submitToDataDog(dataPoint, timestamp, author, datadogMetric, datadogApi
 }
 function getData(commitId = '', githubToken) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log(url);
         const response = yield cross_fetch_1.default(`https://api.github.com/repos/launchdarkly/gonfalon/commits/${commitId}`, {
             headers: { Authorization: `token ${githubToken}` },
         });
