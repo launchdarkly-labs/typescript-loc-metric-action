@@ -8527,7 +8527,7 @@ function submitToDataDog(dataPoint, timestamp, author, datadogMetric, datadogApi
 function getData(url = '', githubToken) {
     return __awaiter(this, void 0, void 0, function* () {
         const response = yield cross_fetch_1.default(url, { headers: { Authorization: `token ${githubToken}` } });
-        console.log(response.blob());
+        console.log(yield response.blob());
         return yield response.json();
     });
 }
