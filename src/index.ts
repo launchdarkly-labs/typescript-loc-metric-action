@@ -85,6 +85,11 @@ async function reportCountOfFilesConverted(
     const renamedFiles = response.files.filter((f: { previous_filename?: string }) => f.previous_filename);
     const count = findFileCountOfJSConversionsToTS(renamedFiles);
 
+    //do not report 0 counts
+    if (count === 0) {
+      return;
+    }
+
     const headCommit = webhookPayload.head_commit;
     const timestampOfHeadCommit = Math.floor(new Date(headCommit.timestamp).getTime() / 1000);
     const author = headCommit.author.email;
