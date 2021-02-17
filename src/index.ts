@@ -31,13 +31,15 @@ type ClocOutput = {
   };
 };
 
+type SeriesType = 'gauge' | 'count' | 'rate' | 'distribution';
+
 async function submitToDataDog(
   dataPoint: number,
   timestamp: number,
   author: string,
   datadogMetric: string,
   datadogApiKey: string,
-  seriesType: string,
+  seriesType: SeriesType,
 ) {
   try {
     const params = new URLSearchParams({ api_key: datadogApiKey });
