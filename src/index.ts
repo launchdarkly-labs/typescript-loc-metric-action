@@ -87,7 +87,6 @@ async function reportCountOfFilesConverted(
 
     //do not report 0 counts
     if (count === 0) {
-      console.log(`User converted ${count} JS files to Typescript ${sourcePath}`);
       return;
     }
 

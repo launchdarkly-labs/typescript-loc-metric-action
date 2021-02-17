@@ -8570,7 +8570,6 @@ function reportCountOfFilesConverted(sourcePath, webhookPayload, datadogMetric, 
             const count = helperMethods_1.findFileCountOfJSConversionsToTS(renamedFiles);
             //do not report 0 counts
             if (count === 0) {
-                console.log(`User converted ${count} JS files to Typescript ${sourcePath}`);
                 return;
             }
             const headCommit = webhookPayload.head_commit;
