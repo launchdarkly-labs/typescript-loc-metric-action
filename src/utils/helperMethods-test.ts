@@ -2,11 +2,16 @@ import { findFileCountOfJSConversionsToTS } from './helperMethods';
 
 describe('helperMethods', () => {
   it('should return the correct count', () => {
-    const filesRemoved = ['internal/api2/flags/flags_patch.go', 'static/ld/components/ManageFlagTargetingContainer.js'];
-    const filesAdded = [
-      'internal/api2/flags/flags_patch_test.go',
-      'static/ld/components/ManageFlagTargetingContainer.tsx',
+    const files = [
+      {
+        previous_filename: 'static/ld/components/ManageFlagTargetingContainer.js',
+        filename: 'static/ld/components/ManageFlagTargetingContainer.tsx',
+      },
+      {
+        previous_filename: 'static/ld/components/flags.js',
+        filename: 'static/ld/components/flags.ts',
+      },
     ];
-    expect(findFileCountOfJSConversionsToTS(filesAdded, filesRemoved)).toEqual(1);
+    expect(findFileCountOfJSConversionsToTS(files)).toEqual(2);
   });
 });

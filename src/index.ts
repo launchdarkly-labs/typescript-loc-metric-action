@@ -80,17 +80,9 @@ async function reportCountOfFilesConverted(
     if (stderr) {
       throw new Error(stderr);
     }
-    const findRenamedFiles = response.files.filter((f: { previous_filename?: string }) => f.previous_filename);
-    let count = 0;
-    findRenamedFiles.forEach((d: { filename: string; previous_filename: string }) => {
-      const [fileName, fileExtension] = d.filename.split('.');
-      const [prevFileName, prevFileExtension] = d.previous_filename.split('.');
-      if (fileExtension === 'ts' && prevFileExtension === 'js') {
-        if (fileName === prevFileName) {
-          count++;
-        }
-      }
-    });
+    const renamedFiles = response.files.filter((f: { previous_filename?: string }) => f.previous_filename);
+    const count = findFileCountOfJSConversionsToTS(renamedFiles);
+
     const headCommit = webhookPayload.head_commit;
     const timestampOfHeadCommit = Math.floor(new Date(headCommit.timestamp).getTime() / 1000);
     const author = headCommit.author.email;

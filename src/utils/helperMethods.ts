@@ -1,15 +1,13 @@
-export function findFileCountOfJSConversionsToTS(filesAdded: string[], filesRemoved: string[]) {
+export function findFileCountOfJSConversionsToTS(findRenamedFiles: { filename: string; previous_filename: string }[]) {
   let count = 0;
-  filesAdded.forEach((d) => {
-    const splitFileName = d.split('.');
-    filesRemoved.forEach((e) => {
-      const splitRemovedFileName = e.split('.');
-      if (splitRemovedFileName[1] === 'js' && (splitFileName[1] === 'ts' || splitFileName[1] === 'tsx')) {
-        if (splitRemovedFileName[0] === splitFileName[0]) {
-          count++;
-        }
+  findRenamedFiles.forEach((d: { filename: string; previous_filename: string }) => {
+    const [fileName, fileExtension] = d.filename.split('.');
+    const [prevFileName, prevFileExtension] = d.previous_filename.split('.');
+    if ((fileExtension === 'ts' || fileExtension === 'tsx') && prevFileExtension === 'js') {
+      if (fileName === prevFileName) {
+        count++;
       }
-    });
+    }
   });
   return count;
 }

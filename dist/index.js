@@ -4919,6 +4919,31 @@ module.exports = require("assert");
 
 /***/ }),
 
+/***/ 377:
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.findFileCountOfJSConversionsToTS = void 0;
+function findFileCountOfJSConversionsToTS(findRenamedFiles) {
+    let count = 0;
+    findRenamedFiles.forEach((d) => {
+        const [fileName, fileExtension] = d.filename.split('.');
+        const [prevFileName, prevFileExtension] = d.previous_filename.split('.');
+        if ((fileExtension === 'ts' || fileExtension === 'tsx') && prevFileExtension === 'js') {
+            if (fileName === prevFileName) {
+                count++;
+            }
+        }
+    });
+    return count;
+}
+exports.findFileCountOfJSConversionsToTS = findFileCountOfJSConversionsToTS;
+
+
+/***/ }),
+
 /***/ 385:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
@@ -8498,6 +8523,7 @@ const child_process_1 = __webpack_require__(129);
 const got_1 = __webpack_require__(77);
 const core = __webpack_require__(470);
 const github = __webpack_require__(469);
+const helperMethods_1 = __webpack_require__(377);
 const cross_fetch_1 = __webpack_require__(612);
 const exec = util_1.promisify(child_process_1.exec);
 function submitToDataDog(dataPoint, timestamp, author, datadogMetric, datadogApiKey, seriesType) {
@@ -8540,17 +8566,8 @@ function reportCountOfFilesConverted(sourcePath, webhookPayload, datadogMetric, 
             if (stderr) {
                 throw new Error(stderr);
             }
-            const findRenamedFiles = response.files.filter((f) => f.previous_filename);
-            let count = 0;
-            findRenamedFiles.forEach((d) => {
-                const [fileName, fileExtension] = d.filename.split('.');
-                const [prevFileName, prevFileExtension] = d.previous_filename.split('.');
-                if (fileExtension === 'ts' && prevFileExtension === 'js') {
-                    if (fileName === prevFileName) {
-                        count++;
-                    }
-                }
-            });
+            const renamedFiles = response.files.filter((f) => f.previous_filename);
+            const count = helperMethods_1.findFileCountOfJSConversionsToTS(renamedFiles);
             const headCommit = webhookPayload.head_commit;
             const timestampOfHeadCommit = Math.floor(new Date(headCommit.timestamp).getTime() / 1000);
             const author = headCommit.author.email;
