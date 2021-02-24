@@ -85,6 +85,8 @@ async function reportCountOfFilesConverted(
     const renamedFiles = response.files.filter((f: { previous_filename?: string }) => f.previous_filename);
     const count = findFileCountOfJSConversionsToTS(renamedFiles);
 
+    console.log('count', count);
+
     //do not report 0 counts
     if (count === 0) {
       return;
