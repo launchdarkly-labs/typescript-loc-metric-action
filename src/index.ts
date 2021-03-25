@@ -87,7 +87,6 @@ async function reportCountOfFilesConverted(
     const count = findFileCountOfJSConversionsToTS(renamedFiles);
     const otherCount = findFileCountOfJSConversionsToTSForAllFiles(otherFiles);
     const totalCount = count + otherCount
-    console.log('testing total count', totalCount)
 
     //do not report 0 counts
     if (totalCount === 0) {

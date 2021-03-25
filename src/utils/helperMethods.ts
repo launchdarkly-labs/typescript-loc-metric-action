@@ -15,10 +15,8 @@ export function findFileCountOfJSConversionsToTS(findRenamedFiles: { filename: s
 export function findFileCountOfJSConversionsToTSForAllFiles(files: { filename: string }[]) {
   let count = 0;
   const countingObj: {[s: string]: number} = {}
-  console.log(countingObj)
   files.forEach((d: { filename: string }) => {
     const [fileName, fileExtension] = d.filename.split('.');
-    console.log(fileName, fileExtension)
     if (fileExtension === 'ts' || fileExtension === 'tsx' || fileExtension === 'js') {
       if (countingObj[fileName] === 0) {
         //we've seen this file before

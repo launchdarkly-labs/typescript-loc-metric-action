@@ -4943,10 +4943,8 @@ exports.findFileCountOfJSConversionsToTS = findFileCountOfJSConversionsToTS;
 function findFileCountOfJSConversionsToTSForAllFiles(files) {
     let count = 0;
     const countingObj = {};
-    console.log(countingObj);
     files.forEach((d) => {
         const [fileName, fileExtension] = d.filename.split('.');
-        console.log(fileName, fileExtension);
         if (fileExtension === 'ts' || fileExtension === 'tsx' || fileExtension === 'js') {
             if (countingObj[fileName] === 0) {
                 //we've seen this file before
@@ -8591,7 +8589,6 @@ function reportCountOfFilesConverted(sourcePath, webhookPayload, datadogMetric, 
             const count = helperMethods_1.findFileCountOfJSConversionsToTS(renamedFiles);
             const otherCount = helperMethods_1.findFileCountOfJSConversionsToTSForAllFiles(otherFiles);
             const totalCount = count + otherCount;
-            console.log('testing total count', totalCount);
             //do not report 0 counts
             if (totalCount === 0) {
                 return;
