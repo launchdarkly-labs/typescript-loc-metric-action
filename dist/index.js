@@ -4943,8 +4943,10 @@ exports.findFileCountOfJSConversionsToTS = findFileCountOfJSConversionsToTS;
 function findFileCountOfJSConversionsToTSForAllFiles(files) {
     let count = 0;
     const countingObj = {};
+    console.log(countingObj);
     files.forEach((d) => {
         const [fileName, fileExtension] = d.filename.split('.');
+        console.log(fileName, fileExtension);
         if (fileExtension === 'ts' || fileExtension === 'tsx' || fileExtension === 'js') {
             if (countingObj[fileName] === 0) {
                 //we've seen this file before
