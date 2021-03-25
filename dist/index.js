@@ -8587,7 +8587,7 @@ function reportCountOfFilesConverted(sourcePath, webhookPayload, datadogMetric, 
                 throw new Error(stderr);
             }
             const renamedFiles = response.files.filter((f) => f.previous_filename);
-            const otherFiles = response.files.filter((f) => f.file_name);
+            const otherFiles = response.files.filter((f) => f.filename);
             const count = helperMethods_1.findFileCountOfJSConversionsToTS(renamedFiles);
             const otherCount = helperMethods_1.findFileCountOfJSConversionsToTSForAllFiles(otherFiles);
             const totalCount = count + otherCount;
