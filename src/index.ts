@@ -3,7 +3,7 @@ import { exec as execCb } from 'child_process';
 import got from 'got';
 import * as core from '@actions/core';
 import * as github from '@actions/github';
-import { findFileCountOfJSConversionsToTS } from './utils/helperMethods';
+import { findFileCountOfJSConversionsToTS, findFileCountOfJSConversionsToTSForAllFiles } from './utils/helperMethods';
 import fetch from 'cross-fetch';
 
 type WebhookPayload = typeof github.context.payload;
@@ -83,19 +83,22 @@ async function reportCountOfFilesConverted(
       throw new Error(stderr);
     }
     const renamedFiles = response.files.filter((f: { previous_filename?: string }) => f.previous_filename);
+    const otherFiles = response.files.filter((f: { file_name?: string }) => f.file_name);
     const count = findFileCountOfJSConversionsToTS(renamedFiles);
+    const otherCount = findFileCountOfJSConversionsToTSForAllFiles(otherFiles);
+    const totalCount = count + otherCount
 
     //do not report 0 counts
-    if (count === 0) {
+    if (totalCount === 0) {
       return;
     }
 
     const headCommit = webhookPayload.head_commit;
     const timestampOfHeadCommit = Math.floor(new Date(headCommit.timestamp).getTime() / 1000);
     const author = headCommit.author.email;
-    await submitToDataDog(count, timestampOfHeadCommit, author, datadogMetric, datadogApiKey, 'count');
+    await submitToDataDog(totalCount, timestampOfHeadCommit, author, datadogMetric, datadogApiKey, 'count');
 
-    console.log(`User converted ${count} JS files to Typescript ${sourcePath}`);
+    console.log(`User converted ${totalCount} JS files to Typescript ${sourcePath}`);
   } catch (error) {
     core.setFailed(error.message);
   }

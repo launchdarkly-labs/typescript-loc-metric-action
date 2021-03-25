@@ -4925,7 +4925,7 @@ module.exports = require("assert");
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.findFileCountOfJSConversionsToTS = void 0;
+exports.findFileCountOfJSConversionsToTSForAllFiles = exports.findFileCountOfJSConversionsToTS = void 0;
 function findFileCountOfJSConversionsToTS(findRenamedFiles) {
     let count = 0;
     findRenamedFiles.forEach((d) => {
@@ -4940,6 +4940,24 @@ function findFileCountOfJSConversionsToTS(findRenamedFiles) {
     return count;
 }
 exports.findFileCountOfJSConversionsToTS = findFileCountOfJSConversionsToTS;
+function findFileCountOfJSConversionsToTSForAllFiles(files) {
+    let count = 0;
+    const countingObj = {};
+    files.forEach((d) => {
+        const [fileName, fileExtension] = d.filename.split('.');
+        if (fileExtension === 'ts' || fileExtension === 'tsx' || fileExtension === 'js') {
+            if (countingObj[fileName] === 0) {
+                //we've seen this file before
+                count++;
+            }
+            else {
+                countingObj[fileName] = 0;
+            }
+        }
+    });
+    return count;
+}
+exports.findFileCountOfJSConversionsToTSForAllFiles = findFileCountOfJSConversionsToTSForAllFiles;
 
 
 /***/ }),
@@ -8567,16 +8585,19 @@ function reportCountOfFilesConverted(sourcePath, webhookPayload, datadogMetric, 
                 throw new Error(stderr);
             }
             const renamedFiles = response.files.filter((f) => f.previous_filename);
+            const otherFiles = response.files.filter((f) => f.file_name);
             const count = helperMethods_1.findFileCountOfJSConversionsToTS(renamedFiles);
+            const otherCount = helperMethods_1.findFileCountOfJSConversionsToTSForAllFiles(otherFiles);
+            const totalCount = count + otherCount;
             //do not report 0 counts
-            if (count === 0) {
+            if (totalCount === 0) {
                 return;
             }
             const headCommit = webhookPayload.head_commit;
             const timestampOfHeadCommit = Math.floor(new Date(headCommit.timestamp).getTime() / 1000);
             const author = headCommit.author.email;
-            yield submitToDataDog(count, timestampOfHeadCommit, author, datadogMetric, datadogApiKey, 'count');
-            console.log(`User converted ${count} JS files to Typescript ${sourcePath}`);
+            yield submitToDataDog(totalCount, timestampOfHeadCommit, author, datadogMetric, datadogApiKey, 'count');
+            console.log(`User converted ${totalCount} JS files to Typescript ${sourcePath}`);
         }
         catch (error) {
             core.setFailed(error.message);
