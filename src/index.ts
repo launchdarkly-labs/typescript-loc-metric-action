@@ -82,6 +82,9 @@ async function reportCountOfFilesConverted(
     if (stderr) {
       throw new Error(stderr);
     }
+
+    console.log(response.filters);
+
     const renamedFiles = response.files
       ? response.files.filter((f: { previous_filename?: string }) => f.previous_filename)
       : [];
