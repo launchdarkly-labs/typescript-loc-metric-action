@@ -6894,7 +6894,7 @@ const github = __webpack_require__(469);
 const helperMethods_1 = __webpack_require__(377);
 const node_fetch_1 = __webpack_require__(454);
 const exec = util_1.promisify(child_process_1.exec);
-function submitToDataDog(dataPoint, timestamp, author, datadogMetric, datadogApiKey, seriesType) {
+function submitToDataDog(dataPoint, timestamp, author, branch, datadogMetric, datadogApiKey, seriesType) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const params = new URLSearchParams({ api_key: datadogApiKey });
@@ -6906,7 +6906,7 @@ function submitToDataDog(dataPoint, timestamp, author, datadogMetric, datadogApi
                             metric: datadogMetric,
                             type: seriesType,
                             points: [[timestamp, dataPoint]],
-                            tags: [`author:${author}`],
+                            tags: [`author:${author}`, `branch:${branch}`],
                         },
                     ],
                 },
@@ -6948,7 +6948,8 @@ function reportCountOfFilesConverted(sourcePath, webhookPayload, datadogMetric, 
             const headCommit = webhookPayload.head_commit;
             const timestampOfHeadCommit = Math.floor(new Date(headCommit.timestamp).getTime() / 1000);
             const author = headCommit.author.email;
-            yield submitToDataDog(totalCount, timestampOfHeadCommit, author, datadogMetric, datadogApiKey, 'count');
+            const branch = webhookPayload.check_suite.head_branch;
+            yield submitToDataDog(totalCount, timestampOfHeadCommit, author, branch, datadogMetric, datadogApiKey, 'count');
             console.log(`User converted ${totalCount} JS files to Typescript ${sourcePath}`);
         }
         catch (error) {
@@ -6968,7 +6969,8 @@ function reportRatio(sourcePath, webhookPayload, datadogMetric, datadogApiKey) {
             const headCommit = webhookPayload.head_commit;
             const timestampOfHeadCommit = Math.floor(new Date(headCommit.timestamp).getTime() / 1000);
             const author = headCommit.author.email;
-            yield submitToDataDog(ratio, timestampOfHeadCommit, author, datadogMetric, datadogApiKey, 'gauge');
+            const branch = webhookPayload.check_suite.head_branch;
+            yield submitToDataDog(ratio, timestampOfHeadCommit, author, branch, datadogMetric, datadogApiKey, 'gauge');
             console.log(`TypeScript is ${Math.round(ratio * 100)}% of the code in ${sourcePath}`);
         }
         catch (error) {

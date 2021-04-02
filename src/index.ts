@@ -126,8 +126,9 @@ async function reportRatio(
     const headCommit = webhookPayload.head_commit;
     const timestampOfHeadCommit = Math.floor(new Date(headCommit.timestamp).getTime() / 1000);
     const author = headCommit.author.email;
+    const branch = webhookPayload.check_suite.head_branch;
 
-    await submitToDataDog(ratio, timestampOfHeadCommit, author, datadogMetric, datadogApiKey, 'gauge');
+    await submitToDataDog(ratio, timestampOfHeadCommit, author, branch, datadogMetric, datadogApiKey, 'gauge');
 
     console.log(`TypeScript is ${Math.round(ratio * 100)}% of the code in ${sourcePath}`);
   } catch (error) {
