@@ -6892,7 +6892,6 @@ const got_1 = __webpack_require__(77);
 const core = __webpack_require__(470);
 const github = __webpack_require__(469);
 const helperMethods_1 = __webpack_require__(377);
-const node_fetch_1 = __webpack_require__(454);
 const exec = util_1.promisify(child_process_1.exec);
 function submitToDataDog(dataPoint, timestamp, author, branch, datadogMetric, datadogApiKey, seriesType) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -6920,10 +6919,11 @@ function submitToDataDog(dataPoint, timestamp, author, branch, datadogMetric, da
 }
 function getData(commitId = '', githubToken) {
     return __awaiter(this, void 0, void 0, function* () {
-        const response = yield node_fetch_1.default(`https://api.github.com/repos/launchdarkly/gonfalon/commits/${commitId}`, {
+        const response = yield got_1.default(`https://api.github.com/repos/launchdarkly/gonfalon/commits/${commitId}`, {
             headers: { Authorization: `token ${githubToken}` },
+            responseType: 'json',
         });
-        return yield response.json();
+        return response.body;
     });
 }
 function reportCountOfFilesConverted(sourcePath, webhookPayload, datadogMetric, datadogApiKey, githubToken) {
