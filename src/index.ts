@@ -4,7 +4,7 @@ import got from 'got';
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { findFileCountOfJSConversionsToTS, findFileCountOfJSConversionsToTSForAllFiles } from './utils/helperMethods';
-import fetch from 'cross-fetch';
+import fetch from 'node-fetch';
 
 type WebhookPayload = typeof github.context.payload;
 
