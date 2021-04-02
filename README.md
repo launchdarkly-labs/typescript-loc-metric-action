@@ -24,8 +24,10 @@ jobs:
         uses: launchdarkly-labs/typescript-loc-metric-action@main
         with:
           source-path: '<!-- Source path goes here -->'
-          datadog-metric: '<!-- Datadog metric name goes here -->'
+          datadog-typescript-progress-metric: '<!-- Datadog lines-of-code metric name goes here -->'
+          datadog-files-converted-metric: '<!-- Datadog converted-files metric name goes here -->'
           datadog-api-key: ${{ secrets.DATADOG_API_KEY }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ## Contributing

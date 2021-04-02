@@ -83,8 +83,11 @@ async function reportCountOfFilesConverted(
     if (stderr) {
       throw new Error(stderr);
     }
-    const renamedFiles = response.files.filter((f: { previous_filename?: string }) => f.previous_filename);
-    const otherFiles = response.files.filter((f: { filename?: string }) => f.filename);
+
+    const renamedFiles = response.files
+      ? response.files.filter((f: { previous_filename?: string }) => f.previous_filename)
+      : [];
+    const otherFiles = response.files ? response.files.filter((f: { filename?: string }) => f.filename) : [];
     const count = findFileCountOfJSConversionsToTS(renamedFiles);
     const otherCount = findFileCountOfJSConversionsToTSForAllFiles(otherFiles);
     const totalCount = count + otherCount;
