@@ -4,7 +4,6 @@ import got from 'got';
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { findFileCountOfJSConversionsToTS, findFileCountOfJSConversionsToTSForAllFiles } from './utils/helperMethods';
-import fetch from 'node-fetch';
 
 type WebhookPayload = typeof github.context.payload;
 
@@ -63,11 +62,12 @@ async function submitToDataDog(
   }
 }
 
-async function getData(commitId = '', githubToken: string) {
-  const response = await fetch(`https://api.github.com/repos/launchdarkly/gonfalon/commits/${commitId}`, {
+async function getData(commitId = '', githubToken: string): Promise<any> {
+  const response = await got(`https://api.github.com/repos/launchdarkly/gonfalon/commits/${commitId}`, {
     headers: { Authorization: `token ${githubToken}` },
+    responseType: 'json',
   });
-  return await response.json();
+  return response.body;
 }
 
 async function reportCountOfFilesConverted(
