@@ -6934,7 +6934,6 @@ function reportCountOfFilesConverted(sourcePath, webhookPayload, datadogMetric, 
             if (stderr) {
                 throw new Error(stderr);
             }
-            console.log(response.filters);
             const renamedFiles = response.files
                 ? response.files.filter((f) => f.previous_filename)
                 : [];
