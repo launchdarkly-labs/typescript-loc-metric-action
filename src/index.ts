@@ -37,6 +37,7 @@ async function submitToDataDog(
   dataPoint: number,
   timestamp: number,
   author: string,
+  branch: string,
   datadogMetric: string,
   datadogApiKey: string,
   seriesType: SeriesType,
@@ -51,7 +52,7 @@ async function submitToDataDog(
             metric: datadogMetric,
             type: seriesType,
             points: [[timestamp, dataPoint]],
-            tags: [`author:${author}`],
+            tags: [`author:${author}`, `branch:${branch}`],
           },
         ],
       },
@@ -86,7 +87,7 @@ async function reportCountOfFilesConverted(
     const otherFiles = response.files.filter((f: { filename?: string }) => f.filename);
     const count = findFileCountOfJSConversionsToTS(renamedFiles);
     const otherCount = findFileCountOfJSConversionsToTSForAllFiles(otherFiles);
-    const totalCount = count + otherCount
+    const totalCount = count + otherCount;
 
     //do not report 0 counts
     if (totalCount === 0) {
@@ -96,7 +97,8 @@ async function reportCountOfFilesConverted(
     const headCommit = webhookPayload.head_commit;
     const timestampOfHeadCommit = Math.floor(new Date(headCommit.timestamp).getTime() / 1000);
     const author = headCommit.author.email;
-    await submitToDataDog(totalCount, timestampOfHeadCommit, author, datadogMetric, datadogApiKey, 'count');
+    const branch = webhookPayload.check_suite.head_branch;
+    await submitToDataDog(totalCount, timestampOfHeadCommit, author, branch, datadogMetric, datadogApiKey, 'count');
 
     console.log(`User converted ${totalCount} JS files to Typescript ${sourcePath}`);
   } catch (error) {
