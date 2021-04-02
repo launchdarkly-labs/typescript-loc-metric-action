@@ -6934,6 +6934,7 @@ function reportCountOfFilesConverted(sourcePath, webhookPayload, datadogMetric, 
             if (stderr) {
                 throw new Error(stderr);
             }
+            console.log(webhookPayload);
             const renamedFiles = response.files
                 ? response.files.filter((f) => f.previous_filename)
                 : [];
@@ -6957,7 +6958,7 @@ function reportCountOfFilesConverted(sourcePath, webhookPayload, datadogMetric, 
         }
     });
 }
-function reportRatio(sourcePath, webhookPayload, datadogMetric, datadogApiKey) {
+function reportLinesOfCodeRatio(sourcePath, webhookPayload, datadogMetric, datadogApiKey) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { stdout, stderr } = yield exec(`npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`);
@@ -6984,7 +6985,7 @@ const datadogProgressMetric = core.getInput('datadog-typescript-progress-metric'
 const datadogFilesConvertedMetric = core.getInput('datadog-files-converted-metric');
 const datadogApiKey = core.getInput('datadog-api-key');
 const webhookPayload = github.context.payload;
-reportRatio(sourcePath, webhookPayload, datadogProgressMetric, datadogApiKey);
+reportLinesOfCodeRatio(sourcePath, webhookPayload, datadogProgressMetric, datadogApiKey);
 reportCountOfFilesConverted(sourcePath, webhookPayload, datadogFilesConvertedMetric, datadogApiKey, githubToken);
 
 

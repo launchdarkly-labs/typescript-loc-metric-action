@@ -84,6 +84,8 @@ async function reportCountOfFilesConverted(
       throw new Error(stderr);
     }
 
+    console.log(webhookPayload);
+
     const renamedFiles = response.files
       ? response.files.filter((f: { previous_filename?: string }) => f.previous_filename)
       : [];
@@ -108,7 +110,7 @@ async function reportCountOfFilesConverted(
     core.setFailed(error.message);
   }
 }
-async function reportRatio(
+async function reportLinesOfCodeRatio(
   sourcePath: string,
   webhookPayload: WebhookPayload,
   datadogMetric: string,
@@ -143,5 +145,5 @@ const datadogFilesConvertedMetric = core.getInput('datadog-files-converted-metri
 const datadogApiKey = core.getInput('datadog-api-key');
 const webhookPayload = github.context.payload;
 
-reportRatio(sourcePath, webhookPayload, datadogProgressMetric, datadogApiKey);
+reportLinesOfCodeRatio(sourcePath, webhookPayload, datadogProgressMetric, datadogApiKey);
 reportCountOfFilesConverted(sourcePath, webhookPayload, datadogFilesConvertedMetric, datadogApiKey, githubToken);
