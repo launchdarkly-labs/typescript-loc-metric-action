@@ -6934,7 +6934,7 @@ function reportCountOfFilesConverted(sourcePath, webhookPayload, datadogMetric, 
             if (stderr) {
                 throw new Error(stderr);
             }
-            console.log(webhookPayload);
+            console.log('files', webhookPayload);
             const renamedFiles = response.files
                 ? response.files.filter((f) => f.previous_filename)
                 : [];
@@ -6965,6 +6965,7 @@ function reportLinesOfCodeRatio(sourcePath, webhookPayload, datadogMetric, datad
             if (stderr) {
                 throw new Error(stderr);
             }
+            console.log('loc', webhookPayload);
             const stats = JSON.parse(stdout);
             const ratio = stats.TypeScript.code / stats.SUM.code;
             const headCommit = webhookPayload.head_commit;

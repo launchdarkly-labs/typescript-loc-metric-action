@@ -84,7 +84,7 @@ async function reportCountOfFilesConverted(
       throw new Error(stderr);
     }
 
-    console.log(webhookPayload);
+    console.log('files', webhookPayload);
 
     const renamedFiles = response.files
       ? response.files.filter((f: { previous_filename?: string }) => f.previous_filename)
@@ -122,6 +122,8 @@ async function reportLinesOfCodeRatio(
     if (stderr) {
       throw new Error(stderr);
     }
+
+    console.log('loc', webhookPayload);
 
     const stats = JSON.parse(stdout) as ClocOutput;
     const ratio = stats.TypeScript.code / stats.SUM.code;
