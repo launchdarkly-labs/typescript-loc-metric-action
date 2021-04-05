@@ -6991,7 +6991,6 @@ function reportCountOfFilesConverted(sourcePath, webhookPayload, commit, branch,
             if (stderr) {
                 throw new Error(stderr);
             }
-            console.log('files', webhookPayload);
             const renamedFiles = commit.files
                 ? commit.files.filter((f) => f.previous_filename)
                 : [];
@@ -7043,22 +7042,20 @@ function run() {
         const datadogFilesConvertedMetric = core.getInput('datadog-files-converted-metric');
         const datadogApiKey = core.getInput('datadog-api-key');
         const webhookPayload = github.context.payload;
-        // const action = github.context.action;
-        const branch = getBranch(webhookPayload);
-        const commitId = getCommitId(webhookPayload);
-        if (commitId === undefined) {
-            throw new Error('Could not find commit id');
-        }
-        let commit;
         try {
-            commit = yield getCommitData(commitId, githubToken);
+            const branch = getBranch(webhookPayload);
+            const commitId = getCommitId(webhookPayload);
+            if (commitId === undefined) {
+                throw new Error('Could not find commit id');
+            }
+            const commit = yield getCommitData(commitId, githubToken);
+            console.log(branch, commitId);
+            reportLinesOfCodeRatio(sourcePath, webhookPayload, commit, branch, datadogProgressMetric, datadogApiKey);
+            reportCountOfFilesConverted(sourcePath, webhookPayload, commit, branch, datadogFilesConvertedMetric, datadogApiKey);
         }
         catch (error) {
             core.setFailed(error);
         }
-        console.log(branch, commitId);
-        reportLinesOfCodeRatio(sourcePath, webhookPayload, commit, branch, datadogProgressMetric, datadogApiKey);
-        reportCountOfFilesConverted(sourcePath, webhookPayload, commit, branch, datadogFilesConvertedMetric, datadogApiKey);
     });
 }
 run();
