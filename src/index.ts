@@ -105,7 +105,6 @@ function getBranch(webhookPayload: WebhookPayload) {
 }
 
 function getCommitId(webhookPayload: WebhookPayload) {
-  console.log(`getCommitId | ${webhookPayload.action}`, webhookPayload);
   switch (webhookPayload.action) {
     case 'push':
       return webhookPayload.sha;
@@ -161,7 +160,7 @@ async function reportCountOfFilesConverted(
 
     await submitToDataDog(totalCount, timestamp, email, branch, datadogMetric, datadogApiKey, 'count');
 
-    console.log(`User converted ${totalCount} JS files to Typescript ${sourcePath}`);
+    core.info(`User converted ${totalCount} JS files to Typescript ${sourcePath}`);
   } catch (error) {
     core.setFailed(error.message);
   }
@@ -181,8 +180,6 @@ async function reportLinesOfCodeRatio(
       throw new Error(stderr);
     }
 
-    console.log('loc', webhookPayload);
-
     const stats = JSON.parse(stdout) as ClocOutput;
     const ratio = stats.TypeScript.code / stats.SUM.code;
 
@@ -192,7 +189,7 @@ async function reportLinesOfCodeRatio(
 
     await submitToDataDog(ratio, timestamp, email, branch, datadogMetric, datadogApiKey, 'gauge');
 
-    console.log(`TypeScript is ${Math.round(ratio * 100)}% of the code in ${sourcePath}`);
+    core.info(`TypeScript is ${Math.round(ratio * 100)}% of the code in ${sourcePath}`);
   } catch (error) {
     core.setFailed(error);
   }
@@ -215,7 +212,7 @@ async function run() {
       throw new Error('Could not find commit id');
     }
 
-    console.log(branch, sha);
+    core.info(`Reporting on commit ${sha} to branch ${branch}`);
 
     const commit = await getCommitData(sha, repo, githubToken);
 

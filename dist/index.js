@@ -6961,7 +6961,6 @@ function getBranch(webhookPayload) {
 }
 function getCommitId(webhookPayload) {
     var _a;
-    console.log(`getCommitId | ${webhookPayload.action}`, webhookPayload);
     switch (webhookPayload.action) {
         case 'push':
             return webhookPayload.sha;
@@ -7006,7 +7005,7 @@ function reportCountOfFilesConverted(sourcePath, webhookPayload, commit, branch,
             const email = author.email;
             const timestamp = parseTimestamp(author.date);
             yield submitToDataDog(totalCount, timestamp, email, branch, datadogMetric, datadogApiKey, 'count');
-            console.log(`User converted ${totalCount} JS files to Typescript ${sourcePath}`);
+            core.info(`User converted ${totalCount} JS files to Typescript ${sourcePath}`);
         }
         catch (error) {
             core.setFailed(error.message);
@@ -7020,14 +7019,13 @@ function reportLinesOfCodeRatio(sourcePath, webhookPayload, commit, branch, data
             if (stderr) {
                 throw new Error(stderr);
             }
-            console.log('loc', webhookPayload);
             const stats = JSON.parse(stdout);
             const ratio = stats.TypeScript.code / stats.SUM.code;
             const author = commit.commit.committer;
             const email = author.email;
             const timestamp = parseTimestamp(author.date);
             yield submitToDataDog(ratio, timestamp, email, branch, datadogMetric, datadogApiKey, 'gauge');
-            console.log(`TypeScript is ${Math.round(ratio * 100)}% of the code in ${sourcePath}`);
+            core.info(`TypeScript is ${Math.round(ratio * 100)}% of the code in ${sourcePath}`);
         }
         catch (error) {
             core.setFailed(error);
@@ -7049,7 +7047,7 @@ function run() {
             if (sha === undefined) {
                 throw new Error('Could not find commit id');
             }
-            console.log(branch, sha);
+            core.info(`Reporting on commit ${sha} to branch ${branch}`);
             const commit = yield getCommitData(sha, repo, githubToken);
             reportLinesOfCodeRatio(sourcePath, webhookPayload, commit, branch, datadogProgressMetric, datadogApiKey);
             reportCountOfFilesConverted(sourcePath, webhookPayload, commit, branch, datadogFilesConvertedMetric, datadogApiKey);
