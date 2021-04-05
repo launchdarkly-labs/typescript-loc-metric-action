@@ -42,3 +42,7 @@ $ npm run package
 $ git add .
 $ git commit -m 'Commit message'
 ```
+
+## Random links
+
+Good resource: https://jeffrafter.com/working-with-github-actions/
