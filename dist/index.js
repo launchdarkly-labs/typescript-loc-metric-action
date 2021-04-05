@@ -6929,9 +6929,9 @@ function getCommitData(commitId = '', githubToken) {
 function parseTimestamp(timestamp) {
     return Math.floor(new Date(timestamp).getTime() / 1000);
 }
-function getBranch(action, webhookPayload) {
+function getBranch(webhookPayload) {
     var _a;
-    switch (action) {
+    switch (webhookPayload.action) {
         case 'push':
             return webhookPayload.after;
         case 'opened':
@@ -6956,10 +6956,10 @@ function getBranch(action, webhookPayload) {
             return undefined;
     }
 }
-function getCommitId(action, webhookPayload) {
+function getCommitId(webhookPayload) {
     var _a;
-    console.log(`getCommitId | ${action}`, webhookPayload);
-    switch (action) {
+    console.log(`getCommitId | ${webhookPayload.action}`, webhookPayload);
+    switch (webhookPayload.action) {
         case 'push':
             return webhookPayload.sha;
         case 'opened':
@@ -7043,9 +7043,9 @@ function run() {
         const datadogFilesConvertedMetric = core.getInput('datadog-files-converted-metric');
         const datadogApiKey = core.getInput('datadog-api-key');
         const webhookPayload = github.context.payload;
-        const action = github.context.action;
-        const branch = getBranch(action, webhookPayload);
-        const commitId = getCommitId(action, webhookPayload);
+        // const action = github.context.action;
+        const branch = getBranch(webhookPayload);
+        const commitId = getCommitId(webhookPayload);
         if (commitId === undefined) {
             throw new Error('Could not find commit id');
         }
@@ -7056,6 +7056,7 @@ function run() {
         catch (error) {
             core.setFailed(error);
         }
+        console.log(branch, commitId);
         reportLinesOfCodeRatio(sourcePath, webhookPayload, commit, branch, datadogProgressMetric, datadogApiKey);
         reportCountOfFilesConverted(sourcePath, webhookPayload, commit, branch, datadogFilesConvertedMetric, datadogApiKey);
     });
