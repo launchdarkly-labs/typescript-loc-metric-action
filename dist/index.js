@@ -7048,8 +7048,8 @@ function run() {
             if (commitId === undefined) {
                 throw new Error('Could not find commit id');
             }
-            const commit = yield getCommitData(commitId, githubToken);
             console.log(branch, commitId);
+            const commit = yield getCommitData(commitId, githubToken);
             reportLinesOfCodeRatio(sourcePath, webhookPayload, commit, branch, datadogProgressMetric, datadogApiKey);
             reportCountOfFilesConverted(sourcePath, webhookPayload, commit, branch, datadogFilesConvertedMetric, datadogApiKey);
         }

@@ -215,9 +215,9 @@ async function run() {
       throw new Error('Could not find commit id');
     }
 
-    const commit = await getCommitData(commitId, githubToken);
-
     console.log(branch, commitId);
+
+    const commit = await getCommitData(commitId, githubToken);
 
     reportLinesOfCodeRatio(sourcePath, webhookPayload, commit, branch, datadogProgressMetric, datadogApiKey);
     reportCountOfFilesConverted(sourcePath, webhookPayload, commit, branch, datadogFilesConvertedMetric, datadogApiKey);
