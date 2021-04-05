@@ -3,6 +3,7 @@ import { exec as execCb } from 'child_process';
 import got from 'got';
 import * as core from '@actions/core';
 import * as github from '@actions/github';
+import * as urlTemplate from 'url-template';
 import { findFileCountOfJSConversionsToTS, findFileCountOfJSConversionsToTSForAllFiles } from './utils/helperMethods';
 
 type WebhookPayload = typeof github.context.payload;
@@ -62,8 +63,10 @@ async function submitToDataDog(
   }
 }
 
-async function getCommitData(commitId = '', githubToken: string): Promise<any> {
-  const response = await got(`https://api.github.com/repos/launchdarkly/gonfalon/commits/${commitId}`, {
+async function getCommitData(sha: string, repository: any, githubToken: string): Promise<any> {
+  const url = urlTemplate.parse(repository.commits_url);
+  const commitUrl = url.expand({ sha });
+  const response = await got(commitUrl, {
     headers: { Authorization: `token ${githubToken}` },
     responseType: 'json',
   });
@@ -206,18 +209,19 @@ async function run() {
   const datadogFilesConvertedMetric = core.getInput('datadog-files-converted-metric');
   const datadogApiKey = core.getInput('datadog-api-key');
   const webhookPayload = github.context.payload;
+  const repo = webhookPayload.repository;
 
   try {
     const branch = getBranch(webhookPayload);
-    const commitId = getCommitId(webhookPayload);
+    const sha = getCommitId(webhookPayload);
 
-    if (commitId === undefined) {
+    if (sha === undefined) {
       throw new Error('Could not find commit id');
     }
 
-    console.log(branch, commitId);
+    console.log(branch, sha);
 
-    const commit = await getCommitData(commitId, githubToken);
+    const commit = await getCommitData(sha, repo, githubToken);
 
     reportLinesOfCodeRatio(sourcePath, webhookPayload, commit, branch, datadogProgressMetric, datadogApiKey);
     reportCountOfFilesConverted(sourcePath, webhookPayload, commit, branch, datadogFilesConvertedMetric, datadogApiKey);
