@@ -6917,7 +6917,7 @@ function submitToDataDog(dataPoint, timestamp, author, branch, datadogMetric, da
         }
     });
 }
-function getData(commitId = '', githubToken) {
+function getCommitData(commitId = '', githubToken) {
     return __awaiter(this, void 0, void 0, function* () {
         const response = yield got_1.default(`https://api.github.com/repos/launchdarkly/gonfalon/commits/${commitId}`, {
             headers: { Authorization: `token ${githubToken}` },
@@ -6926,19 +6926,75 @@ function getData(commitId = '', githubToken) {
         return response.body;
     });
 }
-function reportCountOfFilesConverted(sourcePath, webhookPayload, datadogMetric, datadogApiKey, githubToken) {
+function parseTimestamp(timestamp) {
+    return Math.floor(new Date(timestamp).getTime() / 1000);
+}
+function getBranch(action, webhookPayload) {
+    var _a;
+    switch (action) {
+        case 'push':
+            return webhookPayload.after;
+        case 'opened':
+        case 'edited':
+        case 'closed':
+        case 'assigned':
+        case 'unassigned':
+        case 'review_requested':
+        case 'review_request_removed':
+        case 'ready_for_review':
+        case 'converted_to_draft':
+        case 'labeled':
+        case 'unlabeled':
+        case 'synchronize':
+        case 'auto_merge_enabled':
+        case 'auto_merge_disabled':
+        case 'locked':
+        case 'unlocked':
+        case 'reopened':
+            return (_a = webhookPayload.pull_request) === null || _a === void 0 ? void 0 : _a.head.ref;
+        default:
+            return undefined;
+    }
+}
+function getCommitId(action, webhookPayload) {
+    var _a;
+    switch (action) {
+        case 'push':
+            return webhookPayload.sha;
+        case 'opened':
+        case 'edited':
+        case 'closed':
+        case 'assigned':
+        case 'unassigned':
+        case 'review_requested':
+        case 'review_request_removed':
+        case 'ready_for_review':
+        case 'converted_to_draft':
+        case 'labeled':
+        case 'unlabeled':
+        case 'synchronize':
+        case 'auto_merge_enabled':
+        case 'auto_merge_disabled':
+        case 'locked':
+        case 'unlocked':
+        case 'reopened':
+            return (_a = webhookPayload.pull_request) === null || _a === void 0 ? void 0 : _a.head.sha;
+        default:
+            return undefined;
+    }
+}
+function reportCountOfFilesConverted(sourcePath, webhookPayload, commit, branch, datadogMetric, datadogApiKey) {
     return __awaiter(this, void 0, void 0, function* () {
-        const response = yield getData(webhookPayload.head_commit.id, githubToken);
         try {
             const { stdout, stderr } = yield exec(`npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`);
             if (stderr) {
                 throw new Error(stderr);
             }
             console.log('files', webhookPayload);
-            const renamedFiles = response.files
-                ? response.files.filter((f) => f.previous_filename)
+            const renamedFiles = commit.files
+                ? commit.files.filter((f) => f.previous_filename)
                 : [];
-            const otherFiles = response.files ? response.files.filter((f) => f.filename) : [];
+            const otherFiles = commit.files ? commit.files.filter((f) => f.filename) : [];
             const count = helperMethods_1.findFileCountOfJSConversionsToTS(renamedFiles);
             const otherCount = helperMethods_1.findFileCountOfJSConversionsToTSForAllFiles(otherFiles);
             const totalCount = count + otherCount;
@@ -6946,11 +7002,10 @@ function reportCountOfFilesConverted(sourcePath, webhookPayload, datadogMetric, 
             if (totalCount === 0) {
                 return;
             }
-            const headCommit = webhookPayload.head_commit;
-            const timestampOfHeadCommit = Math.floor(new Date(headCommit.timestamp).getTime() / 1000);
-            const author = headCommit.author.email;
-            const branch = webhookPayload.check_suite.head_branch;
-            yield submitToDataDog(totalCount, timestampOfHeadCommit, author, branch, datadogMetric, datadogApiKey, 'count');
+            const author = commit.commit.committer;
+            const email = author.email;
+            const timestamp = parseTimestamp(author.date);
+            yield submitToDataDog(totalCount, timestamp, email, branch, datadogMetric, datadogApiKey, 'count');
             console.log(`User converted ${totalCount} JS files to Typescript ${sourcePath}`);
         }
         catch (error) {
@@ -6958,7 +7013,7 @@ function reportCountOfFilesConverted(sourcePath, webhookPayload, datadogMetric, 
         }
     });
 }
-function reportLinesOfCodeRatio(sourcePath, webhookPayload, datadogMetric, datadogApiKey) {
+function reportLinesOfCodeRatio(sourcePath, webhookPayload, commit, branch, datadogMetric, datadogApiKey) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { stdout, stderr } = yield exec(`npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`);
@@ -6968,26 +7023,43 @@ function reportLinesOfCodeRatio(sourcePath, webhookPayload, datadogMetric, datad
             console.log('loc', webhookPayload);
             const stats = JSON.parse(stdout);
             const ratio = stats.TypeScript.code / stats.SUM.code;
-            const headCommit = webhookPayload.head_commit;
-            const timestampOfHeadCommit = Math.floor(new Date(headCommit.timestamp).getTime() / 1000);
-            const author = headCommit.author.email;
-            const branch = webhookPayload.check_suite.head_branch;
-            yield submitToDataDog(ratio, timestampOfHeadCommit, author, branch, datadogMetric, datadogApiKey, 'gauge');
+            const author = commit.commit.committer;
+            const email = author.email;
+            const timestamp = parseTimestamp(author.date);
+            yield submitToDataDog(ratio, timestamp, email, branch, datadogMetric, datadogApiKey, 'gauge');
             console.log(`TypeScript is ${Math.round(ratio * 100)}% of the code in ${sourcePath}`);
         }
         catch (error) {
-            core.setFailed(error.message);
+            core.setFailed(error);
         }
     });
 }
-const sourcePath = core.getInput('source-path');
-const githubToken = core.getInput('github-token');
-const datadogProgressMetric = core.getInput('datadog-typescript-progress-metric');
-const datadogFilesConvertedMetric = core.getInput('datadog-files-converted-metric');
-const datadogApiKey = core.getInput('datadog-api-key');
-const webhookPayload = github.context.payload;
-reportLinesOfCodeRatio(sourcePath, webhookPayload, datadogProgressMetric, datadogApiKey);
-reportCountOfFilesConverted(sourcePath, webhookPayload, datadogFilesConvertedMetric, datadogApiKey, githubToken);
+function run() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const sourcePath = core.getInput('source-path');
+        const githubToken = core.getInput('github-token');
+        const datadogProgressMetric = core.getInput('datadog-typescript-progress-metric');
+        const datadogFilesConvertedMetric = core.getInput('datadog-files-converted-metric');
+        const datadogApiKey = core.getInput('datadog-api-key');
+        const webhookPayload = github.context.payload;
+        const action = github.context.action;
+        const branch = getBranch(action, webhookPayload);
+        const commitId = getCommitId(action, webhookPayload);
+        if (commitId === undefined) {
+            throw new Error('Could not find commit id');
+        }
+        let commit;
+        try {
+            commit = yield getCommitData(commitId, githubToken);
+        }
+        catch (error) {
+            core.setFailed(error);
+        }
+        reportLinesOfCodeRatio(sourcePath, webhookPayload, commit, branch, datadogProgressMetric, datadogApiKey);
+        reportCountOfFilesConverted(sourcePath, webhookPayload, commit, branch, datadogFilesConvertedMetric, datadogApiKey);
+    });
+}
+run();
 
 
 /***/ }),
