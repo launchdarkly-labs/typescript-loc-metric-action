@@ -6891,10 +6891,10 @@ const child_process_1 = __webpack_require__(129);
 const got_1 = __webpack_require__(77);
 const core = __webpack_require__(470);
 const github = __webpack_require__(469);
+const urlTemplate = __webpack_require__(714);
 const helperMethods_1 = __webpack_require__(377);
-const node_fetch_1 = __webpack_require__(454);
 const exec = util_1.promisify(child_process_1.exec);
-function submitToDataDog(dataPoint, timestamp, author, datadogMetric, datadogApiKey, seriesType) {
+function submitToDataDog(dataPoint, timestamp, author, branch, datadogMetric, datadogApiKey, seriesType) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const params = new URLSearchParams({ api_key: datadogApiKey });
@@ -6906,7 +6906,7 @@ function submitToDataDog(dataPoint, timestamp, author, datadogMetric, datadogApi
                             metric: datadogMetric,
                             type: seriesType,
                             points: [[timestamp, dataPoint]],
-                            tags: [`author:${author}`],
+                            tags: [`author:${author}`, `branch:${branch}`],
                         },
                     ],
                 },
@@ -6918,45 +6918,101 @@ function submitToDataDog(dataPoint, timestamp, author, datadogMetric, datadogApi
         }
     });
 }
-function getData(commitId = '', githubToken) {
+function getCommitData(sha, repository, githubToken) {
     return __awaiter(this, void 0, void 0, function* () {
-        const response = yield node_fetch_1.default(`https://api.github.com/repos/launchdarkly/gonfalon/commits/${commitId}`, {
+        const url = urlTemplate.parse(repository.commits_url);
+        const commitUrl = url.expand({ sha });
+        const response = yield got_1.default(commitUrl, {
             headers: { Authorization: `token ${githubToken}` },
+            responseType: 'json',
         });
-        return yield response.json();
+        return response.body;
     });
 }
-function reportCountOfFilesConverted(sourcePath, webhookPayload, datadogMetric, datadogApiKey, githubToken) {
+function parseTimestamp(timestamp) {
+    return Math.floor(new Date(timestamp).getTime() / 1000);
+}
+function getBranch(webhookPayload) {
+    var _a;
+    switch (webhookPayload.action) {
+        case 'push':
+            return webhookPayload.after;
+        case 'opened':
+        case 'edited':
+        case 'closed':
+        case 'assigned':
+        case 'unassigned':
+        case 'review_requested':
+        case 'review_request_removed':
+        case 'ready_for_review':
+        case 'converted_to_draft':
+        case 'labeled':
+        case 'unlabeled':
+        case 'synchronize':
+        case 'auto_merge_enabled':
+        case 'auto_merge_disabled':
+        case 'locked':
+        case 'unlocked':
+        case 'reopened':
+            return (_a = webhookPayload.pull_request) === null || _a === void 0 ? void 0 : _a.head.ref;
+        default:
+            return undefined;
+    }
+}
+function getCommitId(webhookPayload) {
+    var _a;
+    switch (webhookPayload.action) {
+        case 'push':
+            return webhookPayload.sha;
+        case 'opened':
+        case 'edited':
+        case 'closed':
+        case 'assigned':
+        case 'unassigned':
+        case 'review_requested':
+        case 'review_request_removed':
+        case 'ready_for_review':
+        case 'converted_to_draft':
+        case 'labeled':
+        case 'unlabeled':
+        case 'synchronize':
+        case 'auto_merge_enabled':
+        case 'auto_merge_disabled':
+        case 'locked':
+        case 'unlocked':
+        case 'reopened':
+            return (_a = webhookPayload.pull_request) === null || _a === void 0 ? void 0 : _a.head.sha;
+        default:
+            return undefined;
+    }
+}
+function reportCountOfFilesConverted(sourcePath, commit, branch, datadogMetric, datadogApiKey) {
     return __awaiter(this, void 0, void 0, function* () {
-        const response = yield getData(webhookPayload.head_commit.id, githubToken);
         try {
-            const { stdout, stderr } = yield exec(`npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`);
-            if (stderr) {
-                throw new Error(stderr);
-            }
-            const renamedFiles = response.files
-                ? response.files.filter((f) => f.previous_filename)
+            const renamedFiles = commit.files
+                ? commit.files.filter((f) => f.previous_filename)
                 : [];
-            const otherFiles = response.files ? response.files.filter((f) => f.filename) : [];
+            const otherFiles = commit.files ? commit.files.filter((f) => f.filename) : [];
             const count = helperMethods_1.findFileCountOfJSConversionsToTS(renamedFiles);
             const otherCount = helperMethods_1.findFileCountOfJSConversionsToTSForAllFiles(otherFiles);
             const totalCount = count + otherCount;
-            //do not report 0 counts
+            // do not report 0 counts
             if (totalCount === 0) {
+                core.info('Ignoring commit with no JS or TS/TSX file changes');
                 return;
             }
-            const headCommit = webhookPayload.head_commit;
-            const timestampOfHeadCommit = Math.floor(new Date(headCommit.timestamp).getTime() / 1000);
-            const author = headCommit.author.email;
-            yield submitToDataDog(totalCount, timestampOfHeadCommit, author, datadogMetric, datadogApiKey, 'count');
-            console.log(`User converted ${totalCount} JS files to Typescript ${sourcePath}`);
+            const author = commit.commit.committer;
+            const email = author.email;
+            const timestamp = parseTimestamp(author.date);
+            yield submitToDataDog(totalCount, timestamp, email, branch, datadogMetric, datadogApiKey, 'count');
+            core.info(`User converted ${totalCount} JS files to Typescript ${sourcePath}`);
         }
         catch (error) {
             core.setFailed(error.message);
         }
     });
 }
-function reportRatio(sourcePath, webhookPayload, datadogMetric, datadogApiKey) {
+function reportLinesOfCodeRatio(sourcePath, commit, branch, datadogMetric, datadogApiKey) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { stdout, stderr } = yield exec(`npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`);
@@ -6965,25 +7021,43 @@ function reportRatio(sourcePath, webhookPayload, datadogMetric, datadogApiKey) {
             }
             const stats = JSON.parse(stdout);
             const ratio = stats.TypeScript.code / stats.SUM.code;
-            const headCommit = webhookPayload.head_commit;
-            const timestampOfHeadCommit = Math.floor(new Date(headCommit.timestamp).getTime() / 1000);
-            const author = headCommit.author.email;
-            yield submitToDataDog(ratio, timestampOfHeadCommit, author, datadogMetric, datadogApiKey, 'gauge');
-            console.log(`TypeScript is ${Math.round(ratio * 100)}% of the code in ${sourcePath}`);
+            const author = commit.commit.committer;
+            const email = author.email;
+            const timestamp = parseTimestamp(author.date);
+            yield submitToDataDog(ratio, timestamp, email, branch, datadogMetric, datadogApiKey, 'gauge');
+            core.info(`TypeScript is ${Math.round(ratio * 100)}% of the code in ${sourcePath}`);
         }
         catch (error) {
-            core.setFailed(error.message);
+            core.setFailed(error);
         }
     });
 }
-const sourcePath = core.getInput('source-path');
-const githubToken = core.getInput('github-token');
-const datadogProgressMetric = core.getInput('datadog-typescript-progress-metric');
-const datadogFilesConvertedMetric = core.getInput('datadog-files-converted-metric');
-const datadogApiKey = core.getInput('datadog-api-key');
-const webhookPayload = github.context.payload;
-reportRatio(sourcePath, webhookPayload, datadogProgressMetric, datadogApiKey);
-reportCountOfFilesConverted(sourcePath, webhookPayload, datadogFilesConvertedMetric, datadogApiKey, githubToken);
+function run() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const sourcePath = core.getInput('source-path');
+        const githubToken = core.getInput('github-token');
+        const datadogProgressMetric = core.getInput('datadog-typescript-progress-metric');
+        const datadogFilesConvertedMetric = core.getInput('datadog-files-converted-metric');
+        const datadogApiKey = core.getInput('datadog-api-key');
+        const webhookPayload = github.context.payload;
+        const repo = webhookPayload.repository;
+        try {
+            const branch = getBranch(webhookPayload);
+            const sha = getCommitId(webhookPayload);
+            if (sha === undefined) {
+                throw new Error('Could not find commit id');
+            }
+            core.info(`Reporting on commit ${sha} to branch ${branch}`);
+            const commit = yield getCommitData(sha, repo, githubToken);
+            reportLinesOfCodeRatio(sourcePath, commit, branch, datadogProgressMetric, datadogApiKey);
+            reportCountOfFilesConverted(sourcePath, commit, branch, datadogFilesConvertedMetric, datadogApiKey);
+        }
+        catch (error) {
+            core.setFailed(error);
+        }
+    });
+}
+run();
 
 
 /***/ }),
@@ -9044,6 +9118,201 @@ makeError(TypeError, 'ERR_HTTP_INVALID_HEADER_VALUE', args => {
 makeError(TypeError, 'ERR_INVALID_CHAR', args => {
 	return `Invalid character in ${args[0]} [${args[1]}]`;
 });
+
+
+/***/ }),
+
+/***/ 714:
+/***/ (function(module) {
+
+(function (root, factory) {
+    if (true) {
+        module.exports = factory();
+    } else {}
+}(this, function () {
+  /**
+   * @constructor
+   */
+  function UrlTemplate() {
+  }
+
+  /**
+   * @private
+   * @param {string} str
+   * @return {string}
+   */
+  UrlTemplate.prototype.encodeReserved = function (str) {
+    return str.split(/(%[0-9A-Fa-f]{2})/g).map(function (part) {
+      if (!/%[0-9A-Fa-f]/.test(part)) {
+        part = encodeURI(part).replace(/%5B/g, '[').replace(/%5D/g, ']');
+      }
+      return part;
+    }).join('');
+  };
+
+  /**
+   * @private
+   * @param {string} str
+   * @return {string}
+   */
+  UrlTemplate.prototype.encodeUnreserved = function (str) {
+    return encodeURIComponent(str).replace(/[!'()*]/g, function (c) {
+      return '%' + c.charCodeAt(0).toString(16).toUpperCase();
+    });
+  }
+
+  /**
+   * @private
+   * @param {string} operator
+   * @param {string} value
+   * @param {string} key
+   * @return {string}
+   */
+  UrlTemplate.prototype.encodeValue = function (operator, value, key) {
+    value = (operator === '+' || operator === '#') ? this.encodeReserved(value) : this.encodeUnreserved(value);
+
+    if (key) {
+      return this.encodeUnreserved(key) + '=' + value;
+    } else {
+      return value;
+    }
+  };
+
+  /**
+   * @private
+   * @param {*} value
+   * @return {boolean}
+   */
+  UrlTemplate.prototype.isDefined = function (value) {
+    return value !== undefined && value !== null;
+  };
+
+  /**
+   * @private
+   * @param {string}
+   * @return {boolean}
+   */
+  UrlTemplate.prototype.isKeyOperator = function (operator) {
+    return operator === ';' || operator === '&' || operator === '?';
+  };
+
+  /**
+   * @private
+   * @param {Object} context
+   * @param {string} operator
+   * @param {string} key
+   * @param {string} modifier
+   */
+  UrlTemplate.prototype.getValues = function (context, operator, key, modifier) {
+    var value = context[key],
+        result = [];
+
+    if (this.isDefined(value) && value !== '') {
+      if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+        value = value.toString();
+
+        if (modifier && modifier !== '*') {
+          value = value.substring(0, parseInt(modifier, 10));
+        }
+
+        result.push(this.encodeValue(operator, value, this.isKeyOperator(operator) ? key : null));
+      } else {
+        if (modifier === '*') {
+          if (Array.isArray(value)) {
+            value.filter(this.isDefined).forEach(function (value) {
+              result.push(this.encodeValue(operator, value, this.isKeyOperator(operator) ? key : null));
+            }, this);
+          } else {
+            Object.keys(value).forEach(function (k) {
+              if (this.isDefined(value[k])) {
+                result.push(this.encodeValue(operator, value[k], k));
+              }
+            }, this);
+          }
+        } else {
+          var tmp = [];
+
+          if (Array.isArray(value)) {
+            value.filter(this.isDefined).forEach(function (value) {
+              tmp.push(this.encodeValue(operator, value));
+            }, this);
+          } else {
+            Object.keys(value).forEach(function (k) {
+              if (this.isDefined(value[k])) {
+                tmp.push(this.encodeUnreserved(k));
+                tmp.push(this.encodeValue(operator, value[k].toString()));
+              }
+            }, this);
+          }
+
+          if (this.isKeyOperator(operator)) {
+            result.push(this.encodeUnreserved(key) + '=' + tmp.join(','));
+          } else if (tmp.length !== 0) {
+            result.push(tmp.join(','));
+          }
+        }
+      }
+    } else {
+      if (operator === ';') {
+        if (this.isDefined(value)) {
+          result.push(this.encodeUnreserved(key));
+        }
+      } else if (value === '' && (operator === '&' || operator === '?')) {
+        result.push(this.encodeUnreserved(key) + '=');
+      } else if (value === '') {
+        result.push('');
+      }
+    }
+    return result;
+  };
+
+  /**
+   * @param {string} template
+   * @return {function(Object):string}
+   */
+  UrlTemplate.prototype.parse = function (template) {
+    var that = this;
+    var operators = ['+', '#', '.', '/', ';', '?', '&'];
+
+    return {
+      expand: function (context) {
+        return template.replace(/\{([^\{\}]+)\}|([^\{\}]+)/g, function (_, expression, literal) {
+          if (expression) {
+            var operator = null,
+                values = [];
+
+            if (operators.indexOf(expression.charAt(0)) !== -1) {
+              operator = expression.charAt(0);
+              expression = expression.substr(1);
+            }
+
+            expression.split(/,/g).forEach(function (variable) {
+              var tmp = /([^:\*]*)(?::(\d+)|(\*))?/.exec(variable);
+              values.push.apply(values, that.getValues(context, operator, tmp[1], tmp[2] || tmp[3]));
+            });
+
+            if (operator && operator !== '+') {
+              var separator = ',';
+
+              if (operator === '?') {
+                separator = '&';
+              } else if (operator !== '#') {
+                separator = operator;
+              }
+              return (values.length !== 0 ? operator : '') + values.join(separator);
+            } else {
+              return values.join(',');
+            }
+          } else {
+            return that.encodeReserved(literal);
+          }
+        });
+      }
+    };
+  };
+
+  return new UrlTemplate();
+}));
 
 
 /***/ }),
