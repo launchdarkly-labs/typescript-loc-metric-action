@@ -133,7 +133,6 @@ function getCommitId(webhookPayload: WebhookPayload) {
 
 async function reportCountOfFilesConverted(
   sourcePath: string,
-  webhookPayload: WebhookPayload,
   commit: any,
   branch: string,
   datadogMetric: string,
@@ -165,9 +164,9 @@ async function reportCountOfFilesConverted(
     core.setFailed(error.message);
   }
 }
+
 async function reportLinesOfCodeRatio(
   sourcePath: string,
-  webhookPayload: WebhookPayload,
   commit: any,
   branch: string,
   datadogMetric: string,
@@ -216,8 +215,8 @@ async function run() {
 
     const commit = await getCommitData(sha, repo, githubToken);
 
-    reportLinesOfCodeRatio(sourcePath, webhookPayload, commit, branch, datadogProgressMetric, datadogApiKey);
-    reportCountOfFilesConverted(sourcePath, webhookPayload, commit, branch, datadogFilesConvertedMetric, datadogApiKey);
+    reportLinesOfCodeRatio(sourcePath, commit, branch, datadogProgressMetric, datadogApiKey);
+    reportCountOfFilesConverted(sourcePath, commit, branch, datadogFilesConvertedMetric, datadogApiKey);
   } catch (error) {
     core.setFailed(error);
   }

@@ -6986,7 +6986,7 @@ function getCommitId(webhookPayload) {
             return undefined;
     }
 }
-function reportCountOfFilesConverted(sourcePath, webhookPayload, commit, branch, datadogMetric, datadogApiKey) {
+function reportCountOfFilesConverted(sourcePath, commit, branch, datadogMetric, datadogApiKey) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const renamedFiles = commit.files
@@ -7012,7 +7012,7 @@ function reportCountOfFilesConverted(sourcePath, webhookPayload, commit, branch,
         }
     });
 }
-function reportLinesOfCodeRatio(sourcePath, webhookPayload, commit, branch, datadogMetric, datadogApiKey) {
+function reportLinesOfCodeRatio(sourcePath, commit, branch, datadogMetric, datadogApiKey) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { stdout, stderr } = yield exec(`npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`);
@@ -7049,8 +7049,8 @@ function run() {
             }
             core.info(`Reporting on commit ${sha} to branch ${branch}`);
             const commit = yield getCommitData(sha, repo, githubToken);
-            reportLinesOfCodeRatio(sourcePath, webhookPayload, commit, branch, datadogProgressMetric, datadogApiKey);
-            reportCountOfFilesConverted(sourcePath, webhookPayload, commit, branch, datadogFilesConvertedMetric, datadogApiKey);
+            reportLinesOfCodeRatio(sourcePath, commit, branch, datadogProgressMetric, datadogApiKey);
+            reportCountOfFilesConverted(sourcePath, commit, branch, datadogFilesConvertedMetric, datadogApiKey);
         }
         catch (error) {
             core.setFailed(error);
