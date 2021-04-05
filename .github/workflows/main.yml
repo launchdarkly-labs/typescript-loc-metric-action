@@ -22,7 +22,7 @@ jobs:
         id: typescript-loc-ratio
         with:
           source-path: './example'
-          datadog-files-converted-metric: 'gonfalon.files.converted.metric'
+          datadog-files-converted-metric: 'dev.gonfalon.files.converted.metric'
           datadog-typescript-progress-metric: 'dev.gonfalon.typescript.progress'
           datadog-api-key: ${{ secrets.DATADOG_API_KEY }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
