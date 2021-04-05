@@ -62,7 +62,7 @@ async function submitToDataDog(
   }
 }
 
-async function getData(commitId = '', githubToken: string): Promise<any> {
+async function getCommitData(commitId = '', githubToken: string): Promise<any> {
   const response = await got(`https://api.github.com/repos/launchdarkly/gonfalon/commits/${commitId}`, {
     headers: { Authorization: `token ${githubToken}` },
     responseType: 'json',
@@ -70,14 +70,72 @@ async function getData(commitId = '', githubToken: string): Promise<any> {
   return response.body;
 }
 
+function parseTimestamp(timestamp: string) {
+  return Math.floor(new Date(timestamp).getTime() / 1000);
+}
+
+function getBranch(action: string, webhookPayload: WebhookPayload) {
+  switch (action) {
+    case 'push':
+      return webhookPayload.after;
+    case 'opened':
+    case 'edited':
+    case 'closed':
+    case 'assigned':
+    case 'unassigned':
+    case 'review_requested':
+    case 'review_request_removed':
+    case 'ready_for_review':
+    case 'converted_to_draft':
+    case 'labeled':
+    case 'unlabeled':
+    case 'synchronize':
+    case 'auto_merge_enabled':
+    case 'auto_merge_disabled':
+    case 'locked':
+    case 'unlocked':
+    case 'reopened':
+      return webhookPayload.pull_request?.head.ref;
+    default:
+      return undefined;
+  }
+}
+
+function getCommitId(action: string, webhookPayload: WebhookPayload) {
+  switch (action) {
+    case 'push':
+      return webhookPayload.sha;
+    case 'opened':
+    case 'edited':
+    case 'closed':
+    case 'assigned':
+    case 'unassigned':
+    case 'review_requested':
+    case 'review_request_removed':
+    case 'ready_for_review':
+    case 'converted_to_draft':
+    case 'labeled':
+    case 'unlabeled':
+    case 'synchronize':
+    case 'auto_merge_enabled':
+    case 'auto_merge_disabled':
+    case 'locked':
+    case 'unlocked':
+    case 'reopened':
+      return webhookPayload.pull_request?.head.sha;
+    default:
+      return undefined;
+  }
+}
+
 async function reportCountOfFilesConverted(
   sourcePath: string,
   webhookPayload: WebhookPayload,
+  commit: any,
+  branch: string,
   datadogMetric: string,
   datadogApiKey: string,
-  githubToken: string,
 ) {
-  const response = await getData(webhookPayload.head_commit.id, githubToken);
   try {
     const { stdout, stderr } = await exec(`npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`);
     if (stderr) {
@@ -86,10 +144,10 @@ async function reportCountOfFilesConverted(
 
     console.log('files', webhookPayload);
 
-    const renamedFiles = response.files
-      ? response.files.filter((f: { previous_filename?: string }) => f.previous_filename)
+    const renamedFiles = commit.files
+      ? commit.files.filter((f: { previous_filename?: string }) => f.previous_filename)
       : [];
-    const otherFiles = response.files ? response.files.filter((f: { filename?: string }) => f.filename) : [];
+    const otherFiles = commit.files ? commit.files.filter((f: { filename?: string }) => f.filename) : [];
     const count = findFileCountOfJSConversionsToTS(renamedFiles);
     const otherCount = findFileCountOfJSConversionsToTSForAllFiles(otherFiles);
     const totalCount = count + otherCount;
@@ -99,11 +157,11 @@ async function reportCountOfFilesConverted(
       return;
     }
 
-    const headCommit = webhookPayload.head_commit;
-    const timestampOfHeadCommit = Math.floor(new Date(headCommit.timestamp).getTime() / 1000);
-    const author = headCommit.author.email;
-    const branch = webhookPayload.check_suite.head_branch;
-    await submitToDataDog(totalCount, timestampOfHeadCommit, author, branch, datadogMetric, datadogApiKey, 'count');
+    const author = commit.commit.committer;
+    const email = author.email;
+    const timestamp = parseTimestamp(author.date);
+
+    await submitToDataDog(totalCount, timestamp, email, branch, datadogMetric, datadogApiKey, 'count');
 
     console.log(`User converted ${totalCount} JS files to Typescript ${sourcePath}`);
   } catch (error) {
@@ -113,6 +171,8 @@ async function reportCountOfFilesConverted(
 async function reportLinesOfCodeRatio(
   sourcePath: string,
   webhookPayload: WebhookPayload,
+  commit: any,
+  branch: string,
   datadogMetric: string,
   datadogApiKey: string,
 ) {
@@ -127,25 +187,43 @@ async function reportLinesOfCodeRatio(
 
     const stats = JSON.parse(stdout) as ClocOutput;
     const ratio = stats.TypeScript.code / stats.SUM.code;
-    const headCommit = webhookPayload.head_commit;
-    const timestampOfHeadCommit = Math.floor(new Date(headCommit.timestamp).getTime() / 1000);
-    const author = headCommit.author.email;
-    const branch = webhookPayload.check_suite.head_branch;
 
-    await submitToDataDog(ratio, timestampOfHeadCommit, author, branch, datadogMetric, datadogApiKey, 'gauge');
+    const author = commit.commit.committer;
+    const email = author.email;
+    const timestamp = parseTimestamp(author.date);
+
+    await submitToDataDog(ratio, timestamp, email, branch, datadogMetric, datadogApiKey, 'gauge');
 
     console.log(`TypeScript is ${Math.round(ratio * 100)}% of the code in ${sourcePath}`);
   } catch (error) {
-    core.setFailed(error.message);
+    core.setFailed(error);
   }
 }
 
-const sourcePath = core.getInput('source-path');
-const githubToken = core.getInput('github-token');
-const datadogProgressMetric = core.getInput('datadog-typescript-progress-metric');
-const datadogFilesConvertedMetric = core.getInput('datadog-files-converted-metric');
-const datadogApiKey = core.getInput('datadog-api-key');
-const webhookPayload = github.context.payload;
+async function run() {
+  const sourcePath = core.getInput('source-path');
+  const githubToken = core.getInput('github-token');
+  const datadogProgressMetric = core.getInput('datadog-typescript-progress-metric');
+  const datadogFilesConvertedMetric = core.getInput('datadog-files-converted-metric');
+  const datadogApiKey = core.getInput('datadog-api-key');
+  const webhookPayload = github.context.payload;
+  const action = github.context.action;
+  const branch = getBranch(action, webhookPayload);
+  const commitId = getCommitId(action, webhookPayload);
 
-reportLinesOfCodeRatio(sourcePath, webhookPayload, datadogProgressMetric, datadogApiKey);
-reportCountOfFilesConverted(sourcePath, webhookPayload, datadogFilesConvertedMetric, datadogApiKey, githubToken);
+  if (commitId === undefined) {
+    throw new Error('Could not find commit id');
+  }
+
+  let commit;
+  try {
+    commit = await getCommitData(commitId, githubToken);
+  } catch (error) {
+    core.setFailed(error);
+  }
+
+  reportLinesOfCodeRatio(sourcePath, webhookPayload, commit, branch, datadogProgressMetric, datadogApiKey);
+  reportCountOfFilesConverted(sourcePath, webhookPayload, commit, branch, datadogFilesConvertedMetric, datadogApiKey);
+}
+
+run();
