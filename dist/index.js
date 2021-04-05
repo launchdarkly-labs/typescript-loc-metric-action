@@ -6958,6 +6958,7 @@ function getBranch(action, webhookPayload) {
 }
 function getCommitId(action, webhookPayload) {
     var _a;
+    console.log(`getCommitId | ${action}`, webhookPayload);
     switch (action) {
         case 'push':
             return webhookPayload.sha;
