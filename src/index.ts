@@ -141,11 +141,6 @@ async function reportCountOfFilesConverted(
   datadogApiKey: string,
 ) {
   try {
-    const { stdout, stderr } = await exec(`npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`);
-    if (stderr) {
-      throw new Error(stderr);
-    }
-
     const renamedFiles = commit.files
       ? commit.files.filter((f: { previous_filename?: string }) => f.previous_filename)
       : [];
@@ -154,8 +149,9 @@ async function reportCountOfFilesConverted(
     const otherCount = findFileCountOfJSConversionsToTSForAllFiles(otherFiles);
     const totalCount = count + otherCount;
 
-    //do not report 0 counts
+    // do not report 0 counts
     if (totalCount === 0) {
+      core.info('Ignoring commit with no file changes');
       return;
     }
 

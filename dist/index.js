@@ -6990,10 +6990,6 @@ function getCommitId(webhookPayload) {
 function reportCountOfFilesConverted(sourcePath, webhookPayload, commit, branch, datadogMetric, datadogApiKey) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const { stdout, stderr } = yield exec(`npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`);
-            if (stderr) {
-                throw new Error(stderr);
-            }
             const renamedFiles = commit.files
                 ? commit.files.filter((f) => f.previous_filename)
                 : [];
@@ -7001,8 +6997,9 @@ function reportCountOfFilesConverted(sourcePath, webhookPayload, commit, branch,
             const count = helperMethods_1.findFileCountOfJSConversionsToTS(renamedFiles);
             const otherCount = helperMethods_1.findFileCountOfJSConversionsToTSForAllFiles(otherFiles);
             const totalCount = count + otherCount;
-            //do not report 0 counts
+            // do not report 0 counts
             if (totalCount === 0) {
+                core.info('Ignoring commit with no file changes');
                 return;
             }
             const author = commit.commit.committer;
