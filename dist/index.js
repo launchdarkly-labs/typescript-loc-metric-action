@@ -6998,7 +6998,7 @@ function reportCountOfFilesConverted(sourcePath, commit, branch, datadogMetric, 
             const totalCount = count + otherCount;
             // do not report 0 counts
             if (totalCount === 0) {
-                core.info('Ignoring commit with no file changes');
+                core.info('Ignoring commit with no JS or TS/TSX file changes');
                 return;
             }
             const author = commit.commit.committer;
