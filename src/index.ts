@@ -8,6 +8,8 @@ import { findFileCountOfJSConversionsToTS, findFileCountOfJSConversionsToTSForAl
 
 type WebhookPayload = typeof github.context.payload;
 
+type Commit = Record<string, any>;
+
 const exec = promisify(execCb);
 
 type ClocOutput = {
@@ -63,10 +65,10 @@ async function submitToDataDog(
   }
 }
 
-async function getCommitData(sha: string, repository: any, githubToken: string): Promise<any> {
+async function getCommitData(sha: string, repository: any, githubToken: string): Promise<Commit | undefined> {
   const url = urlTemplate.parse(repository.commits_url);
   const commitUrl = url.expand({ sha });
-  const response = await got(commitUrl, {
+  const response = await got<Commit>(commitUrl, {
     headers: { Authorization: `token ${githubToken}` },
     responseType: 'json',
   });
@@ -83,7 +85,7 @@ function parseBranchName(ref: string) {
   return groups?.branch;
 }
 
-function getBranch(webhookPayload: WebhookPayload) {
+function getBranch(webhookPayload: WebhookPayload): string | undefined {
   switch (webhookPayload.action) {
     case 'push':
       return parseBranchName(webhookPayload.ref);
@@ -110,7 +112,8 @@ function getBranch(webhookPayload: WebhookPayload) {
   }
 }
 
-function getCommitId(webhookPayload: WebhookPayload) {
+function getCommitId(webhookPayload: WebhookPayload): string | undefined {
+  core.debug(`getCommitId action: ${webhookPayload.action}`);
   switch (webhookPayload.action) {
     case 'push':
       return webhookPayload.after;
@@ -214,7 +217,7 @@ async function run() {
     const sha = getCommitId(webhookPayload);
 
     if (sha === undefined) {
-      core.setFailed('Could not find commit id');
+      core.setFailed('Could not find commig sha');
       core.setFailed(JSON.stringify(webhookPayload, null, 2));
       return;
     }
