@@ -7045,7 +7045,9 @@ function run() {
             const branch = getBranch(webhookPayload);
             const sha = getCommitId(webhookPayload);
             if (sha === undefined) {
-                throw new Error('Could not find commit id');
+                core.setFailed('Could not find commit id');
+                core.setFailed(JSON.stringify(webhookPayload, null, 2));
+                return;
             }
             core.info(`Reporting on commit ${sha} to branch ${branch}`);
             const commit = yield getCommitData(sha, repo, githubToken);
