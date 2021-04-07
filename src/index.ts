@@ -113,7 +113,7 @@ function getBranch(webhookPayload: WebhookPayload): string | undefined {
 }
 
 function getCommitId(webhookPayload: WebhookPayload): string | undefined {
-  core.debug(`getCommitId action: ${webhookPayload.action}`);
+  core.info(`getCommitId action: ${webhookPayload.action}`);
   switch (webhookPayload.action) {
     case 'push':
       return webhookPayload.after;
@@ -217,7 +217,7 @@ async function run() {
     const sha = getCommitId(webhookPayload);
 
     if (sha === undefined) {
-      core.setFailed('Could not find commig sha');
+      core.setFailed('Could not find commit sha');
       core.setFailed(JSON.stringify(webhookPayload, null, 2));
       return;
     }
