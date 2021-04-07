@@ -6932,11 +6932,15 @@ function getCommitData(sha, repository, githubToken) {
 function parseTimestamp(timestamp) {
     return Math.floor(new Date(timestamp).getTime() / 1000);
 }
+function parseBranchName(ref) {
+    const { groups } = ref.match(/\/(?<branch>\w+)$/) || {};
+    return groups === null || groups === void 0 ? void 0 : groups.branch;
+}
 function getBranch(webhookPayload) {
     var _a;
     switch (webhookPayload.action) {
         case 'push':
-            return webhookPayload.after;
+            return parseBranchName(webhookPayload.ref);
         case 'opened':
         case 'edited':
         case 'closed':
@@ -6963,7 +6967,7 @@ function getCommitId(webhookPayload) {
     var _a;
     switch (webhookPayload.action) {
         case 'push':
-            return webhookPayload.sha;
+            return webhookPayload.after;
         case 'opened':
         case 'edited':
         case 'closed':
@@ -7046,6 +7050,11 @@ function run() {
             const sha = getCommitId(webhookPayload);
             if (sha === undefined) {
                 core.setFailed('Could not find commit id');
+                core.setFailed(JSON.stringify(webhookPayload, null, 2));
+                return;
+            }
+            if (branch === undefined) {
+                core.setFailed('Could not find ref');
                 core.setFailed(JSON.stringify(webhookPayload, null, 2));
                 return;
             }

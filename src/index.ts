@@ -77,10 +77,16 @@ function parseTimestamp(timestamp: string) {
   return Math.floor(new Date(timestamp).getTime() / 1000);
 }
 
+function parseBranchName(ref: string) {
+  const { groups } = ref.match(/\/(?<branch>\w+)$/) || {};
+
+  return groups?.branch;
+}
+
 function getBranch(webhookPayload: WebhookPayload) {
   switch (webhookPayload.action) {
     case 'push':
-      return webhookPayload.after;
+      return parseBranchName(webhookPayload.ref);
     case 'opened':
     case 'edited':
     case 'closed':
@@ -107,7 +113,7 @@ function getBranch(webhookPayload: WebhookPayload) {
 function getCommitId(webhookPayload: WebhookPayload) {
   switch (webhookPayload.action) {
     case 'push':
-      return webhookPayload.sha;
+      return webhookPayload.after;
     case 'opened':
     case 'edited':
     case 'closed':
@@ -209,6 +215,12 @@ async function run() {
 
     if (sha === undefined) {
       core.setFailed('Could not find commit id');
+      core.setFailed(JSON.stringify(webhookPayload, null, 2));
+      return;
+    }
+
+    if (branch === undefined) {
+      core.setFailed('Could not find ref');
       core.setFailed(JSON.stringify(webhookPayload, null, 2));
       return;
     }
