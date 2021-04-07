@@ -113,7 +113,6 @@ function getBranch(webhookPayload: WebhookPayload): string | undefined {
 }
 
 function getCommitId(webhookPayload: WebhookPayload): string | undefined {
-  core.info(`getCommitId action: ${github.context.eventName}`);
   switch (github.context.eventName) {
     case 'push':
       return webhookPayload.after;
