@@ -86,7 +86,7 @@ function parseBranchName(ref: string) {
 }
 
 function getBranch(webhookPayload: WebhookPayload): string | undefined {
-  switch (webhookPayload.action) {
+  switch (github.context.eventName) {
     case 'push':
       return parseBranchName(webhookPayload.ref);
     case 'opened':
@@ -113,8 +113,8 @@ function getBranch(webhookPayload: WebhookPayload): string | undefined {
 }
 
 function getCommitId(webhookPayload: WebhookPayload): string | undefined {
-  core.info(`getCommitId action: ${webhookPayload.action}`);
-  switch (webhookPayload.action) {
+  core.info(`getCommitId action: ${github.context.eventName}`);
+  switch (github.context.eventName) {
     case 'push':
       return webhookPayload.after;
     case 'opened':
