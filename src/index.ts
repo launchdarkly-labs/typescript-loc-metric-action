@@ -80,7 +80,7 @@ function parseTimestamp(timestamp: string) {
 }
 
 function parseBranchName(ref: string) {
-  const { groups } = ref.match(/\/(?<branch>\w+)$/) || {};
+  const { groups } = ref.match(/refs\/heads\/(?<branch>[a-zA-Z0-9/]+)$/) || {};
 
   return groups?.branch;
 }

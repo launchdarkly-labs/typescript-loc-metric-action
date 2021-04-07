@@ -6933,7 +6933,7 @@ function parseTimestamp(timestamp) {
     return Math.floor(new Date(timestamp).getTime() / 1000);
 }
 function parseBranchName(ref) {
-    const { groups } = ref.match(/\/(?<branch>\w+)$/) || {};
+    const { groups } = ref.match(/refs\/heads\/(?<branch>[a-zA-Z0-9/]+)$/) || {};
     return groups === null || groups === void 0 ? void 0 : groups.branch;
 }
 function getBranch(webhookPayload) {
