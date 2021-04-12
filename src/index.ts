@@ -161,7 +161,7 @@ async function reportCountOfFilesConverted(
       return;
     }
 
-    const author = commit.commit.committer;
+    const author = commit.commit.author;
     const email = author.email;
     const timestamp = parseTimestamp(author.date);
 

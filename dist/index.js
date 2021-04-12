@@ -7005,7 +7005,7 @@ function reportCountOfFilesConverted(sourcePath, commit, branch, datadogMetric, 
                 core.info('Ignoring commit with no JS or TS/TSX file changes');
                 return;
             }
-            const author = commit.commit.committer;
+            const author = commit.commit.author;
             const email = author.email;
             const timestamp = parseTimestamp(author.date);
             yield submitToDataDog(totalCount, timestamp, email, branch, datadogMetric, datadogApiKey, 'count');
