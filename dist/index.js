@@ -7009,7 +7009,7 @@ function reportCountOfFilesConverted(sourcePath, commit, branch, datadogMetric, 
             const email = author.email;
             const timestamp = parseTimestamp(author.date);
             yield submitToDataDog(totalCount, timestamp, email, branch, datadogMetric, datadogApiKey, 'count');
-            core.info(`User converted ${totalCount} JS files to Typescript ${sourcePath}`);
+            core.info(`User ${email} converted ${totalCount} JS files to Typescript ${sourcePath}`);
         }
         catch (error) {
             core.setFailed(error.message);
