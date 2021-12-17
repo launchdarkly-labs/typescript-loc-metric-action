@@ -17,7 +17,7 @@
     "@actions/core": "1.2.4",
     "@actions/github": "4.0.0",
     "@types/jest": "26.0.20",
-    "cloc": "2.5.1",
+    "cloc": "2.9.0",
     "got": "11.5.1",
     "url-template": "2.0.8"
   },
