@@ -181,7 +181,7 @@ async function reportLinesOfCodeRatio(
   datadogApiKey: string,
 ) {
   try {
-    const { stdout, stderr } = await exec(`npx --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`);
+    const { stdout, stderr } = await exec(`npx -y --quiet cloc --include-lang=TypeScript,JavaScript --json ${sourcePath}`);
 
     if (stderr) {
       throw new Error(stderr);
