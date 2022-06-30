@@ -1129,10 +1129,10 @@
     "strip-ansi" "^6.0.0"
     "wrap-ansi" "^6.2.0"
 
-"cloc@2.5.1":
-  "integrity" "sha512-ZHJ592HbnHAshQ7gtnrgeZaVyvou+a+7TM/E/oTZth2c9Mycp4Ymp3/npQ/Qhxgq9ksf8GjTLB9bEyCMTf42BA=="
-  "resolved" "https://registry.npmjs.org/cloc/-/cloc-2.5.1.tgz"
-  "version" "2.5.1"
+"cloc@2.9.0":
+  "integrity" "sha512-Eo97MtQ5nozSd5CFcYgwUg5Ej7GVcdopVd5T+SGwJc3VAmu0vNxV/ZDl06QAQhCUkM2EGKl8nhhP1BZuQXGiZg=="
+  "resolved" "https://registry.npmjs.org/cloc/-/cloc-2.9.0.tgz"
+  "version" "2.9.0"
 
 "clone-response@^1.0.2":
   "integrity" "sha1-0dyXOSAxTfZ/vrlCI7TuNQI56Ws="
