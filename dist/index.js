@@ -744,77 +744,32 @@ module.exports = require("os");
 // We define these manually to ensure they're always copied
 // even if they would move up the prototype chain
 // https://nodejs.org/api/http.html#http_class_http_incomingmessage
-const knownProperties = [
-	'aborted',
-	'complete',
+const knownProps = [
+	'destroy',
+	'setTimeout',
+	'socket',
 	'headers',
+	'trailers',
+	'rawHeaders',
+	'statusCode',
 	'httpVersion',
 	'httpVersionMinor',
 	'httpVersionMajor',
-	'method',
-	'rawHeaders',
 	'rawTrailers',
-	'setTimeout',
-	'socket',
-	'statusCode',
-	'statusMessage',
-	'trailers',
-	'url'
+	'statusMessage'
 ];
 
 module.exports = (fromStream, toStream) => {
-	if (toStream._readableState.autoDestroy) {
-		throw new Error('The second stream must have the `autoDestroy` option set to `false`');
-	}
+	const fromProps = new Set(Object.keys(fromStream).concat(knownProps));
 
-	const fromProperties = new Set(Object.keys(fromStream).concat(knownProperties));
-
-	const properties = {};
-
-	for (const property of fromProperties) {
-		// Don't overwrite existing properties.
-		if (property in toStream) {
+	for (const prop of fromProps) {
+		// Don't overwrite existing properties
+		if (prop in toStream) {
 			continue;
 		}
 
-		properties[property] = {
-			get() {
-				const value = fromStream[property];
-				const isFunction = typeof value === 'function';
-
-				return isFunction ? value.bind(fromStream) : value;
-			},
-			set(value) {
-				fromStream[property] = value;
-			},
-			enumerable: true,
-			configurable: false
-		};
+		toStream[prop] = typeof fromStream[prop] === 'function' ? fromStream[prop].bind(fromStream) : fromStream[prop];
 	}
-
-	Object.defineProperties(toStream, properties);
-
-	fromStream.once('aborted', () => {
-		toStream.destroy();
-
-		toStream.emit('aborted');
-	});
-
-	fromStream.once('close', () => {
-		if (fromStream.complete) {
-			if (toStream.readable) {
-				toStream.once('end', () => {
-					toStream.emit('close');
-				});
-			} else {
-				toStream.emit('close');
-			}
-		} else {
-			toStream.emit('close');
-		}
-	});
-
-	return toStream;
 };
 
 
@@ -2513,46 +2468,6 @@ exports.parse = function (s) {
 
 /***/ }),
 
-/***/ 210:
-/***/ (function(module) {
-
-"use strict";
-
-
-// We define these manually to ensure they're always copied
-// even if they would move up the prototype chain
-// https://nodejs.org/api/http.html#http_class_http_incomingmessage
-const knownProps = [
-	'destroy',
-	'setTimeout',
-	'socket',
-	'headers',
-	'trailers',
-	'rawHeaders',
-	'statusCode',
-	'httpVersion',
-	'httpVersionMinor',
-	'httpVersionMajor',
-	'rawTrailers',
-	'statusMessage'
-];
-
-module.exports = (fromStream, toStream) => {
-	const fromProps = new Set(Object.keys(fromStream).concat(knownProps));
-
-	for (const prop of fromProps) {
-		// Don't overwrite existing properties
-		if (prop in toStream) {
-			continue;
-		}
-
-		toStream[prop] = typeof fromStream[prop] === 'function' ? fromStream[prop].bind(fromStream) : fromStream[prop];
-	}
-};
-
-
-/***/ }),
-
 /***/ 211:
 /***/ (function(module) {
 
@@ -3322,7 +3237,7 @@ __exportStar(__webpack_require__(839), exports);
 
 
 const PassThrough = __webpack_require__(413).PassThrough;
-const mimicResponse = __webpack_require__(210);
+const mimicResponse = __webpack_require__(89);
 
 const cloneResponse = response => {
 	if (!(response && response.pipe)) {
@@ -3400,7 +3315,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
-var isPlainObject = _interopDefault(__webpack_require__(626));
+var isPlainObject = _interopDefault(__webpack_require__(696));
 var universalUserAgent = __webpack_require__(796);
 
 function lowercaseKeys(object) {
@@ -7104,7 +7019,7 @@ function reportCountOfFilesConverted(sourcePath, commit, branch, datadogMetric, 
 function reportLinesOfCodeRatio(sourcePath, commit, branch, datadogMetric, datadogApiKey) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const { stdout, stderr } = yield exec(`npx -y --quiet cloc --include-lang=TypeScript,JavaScript --timeout 10 --json ${sourcePath}`);
+            const { stdout, stderr } = yield exec(`npx -y --quiet cloc --include-lang=TypeScript,JavaScript --timeout 20 --json ${sourcePath}`);
             if (stderr) {
                 throw new Error(stderr);
             }
@@ -7572,6 +7487,91 @@ exports.default = is;
 module.exports = is;
 module.exports.default = is;
 module.exports.assert = exports.assert;
+
+
+/***/ }),
+
+/***/ 537:
+/***/ (function(module) {
+
+"use strict";
+
+
+// We define these manually to ensure they're always copied
+// even if they would move up the prototype chain
+// https://nodejs.org/api/http.html#http_class_http_incomingmessage
+const knownProperties = [
+	'aborted',
+	'complete',
+	'headers',
+	'httpVersion',
+	'httpVersionMinor',
+	'httpVersionMajor',
+	'method',
+	'rawHeaders',
+	'rawTrailers',
+	'setTimeout',
+	'socket',
+	'statusCode',
+	'statusMessage',
+	'trailers',
+	'url'
+];
+
+module.exports = (fromStream, toStream) => {
+	if (toStream._readableState.autoDestroy) {
+		throw new Error('The second stream must have the `autoDestroy` option set to `false`');
+	}
+
+	const fromProperties = new Set(Object.keys(fromStream).concat(knownProperties));
+
+	const properties = {};
+
+	for (const property of fromProperties) {
+		// Don't overwrite existing properties.
+		if (property in toStream) {
+			continue;
+		}
+
+		properties[property] = {
+			get() {
+				const value = fromStream[property];
+				const isFunction = typeof value === 'function';
+
+				return isFunction ? value.bind(fromStream) : value;
+			},
+			set(value) {
+				fromStream[property] = value;
+			},
+			enumerable: true,
+			configurable: false
+		};
+	}
+
+	Object.defineProperties(toStream, properties);
+
+	fromStream.once('aborted', () => {
+		toStream.destroy();
+
+		toStream.emit('aborted');
+	});
+
+	fromStream.once('close', () => {
+		if (fromStream.complete) {
+			if (toStream.readable) {
+				toStream.once('end', () => {
+					toStream.emit('close');
+				});
+			} else {
+				toStream.emit('close');
+			}
+		} else {
+			toStream.emit('close');
+		}
+	});
+
+	return toStream;
+};
 
 
 /***/ }),
@@ -8111,50 +8111,6 @@ class HttpClient {
     }
 }
 exports.HttpClient = HttpClient;
-
-
-/***/ }),
-
-/***/ 548:
-/***/ (function(module) {
-
-"use strict";
-
-
-/*!
- * is-plain-object <https://github.com/jonschlinkert/is-plain-object>
- *
- * Copyright (c) 2014-2017, Jon Schlinkert.
- * Released under the MIT License.
- */
-
-function isObject(o) {
-  return Object.prototype.toString.call(o) === '[object Object]';
-}
-
-function isPlainObject(o) {
-  var ctor,prot;
-
-  if (isObject(o) === false) return false;
-
-  // If has modified constructor
-  ctor = o.constructor;
-  if (ctor === undefined) return true;
-
-  // If has modified prototype
-  prot = ctor.prototype;
-  if (isObject(prot) === false) return false;
-
-  // If constructor does not have an Object-specific method
-  if (prot.hasOwnProperty('isPrototypeOf') === false) {
-    return false;
-  }
-
-  // Most likely a plain Object
-  return true;
-}
-
-module.exports = isPlainObject;
 
 
 /***/ }),
@@ -9013,50 +8969,6 @@ module.exports = require("path");
 
 /***/ }),
 
-/***/ 626:
-/***/ (function(module) {
-
-"use strict";
-
-
-/*!
- * is-plain-object <https://github.com/jonschlinkert/is-plain-object>
- *
- * Copyright (c) 2014-2017, Jon Schlinkert.
- * Released under the MIT License.
- */
-
-function isObject(o) {
-  return Object.prototype.toString.call(o) === '[object Object]';
-}
-
-function isPlainObject(o) {
-  var ctor,prot;
-
-  if (isObject(o) === false) return false;
-
-  // If has modified constructor
-  ctor = o.constructor;
-  if (ctor === undefined) return true;
-
-  // If has modified prototype
-  prot = ctor.prototype;
-  if (isObject(prot) === false) return false;
-
-  // If constructor does not have an Object-specific method
-  if (prot.hasOwnProperty('isPrototypeOf') === false) {
-    return false;
-  }
-
-  // Most likely a plain Object
-  return true;
-}
-
-module.exports = isPlainObject;
-
-
-/***/ }),
-
 /***/ 628:
 /***/ (function(__unusedmodule, exports) {
 
@@ -9120,6 +9032,50 @@ class Deprecation extends Error {
 }
 
 exports.Deprecation = Deprecation;
+
+
+/***/ }),
+
+/***/ 696:
+/***/ (function(module) {
+
+"use strict";
+
+
+/*!
+ * is-plain-object <https://github.com/jonschlinkert/is-plain-object>
+ *
+ * Copyright (c) 2014-2017, Jon Schlinkert.
+ * Released under the MIT License.
+ */
+
+function isObject(o) {
+  return Object.prototype.toString.call(o) === '[object Object]';
+}
+
+function isPlainObject(o) {
+  var ctor,prot;
+
+  if (isObject(o) === false) return false;
+
+  // If has modified constructor
+  ctor = o.constructor;
+  if (ctor === undefined) return true;
+
+  // If has modified prototype
+  prot = ctor.prototype;
+  if (isObject(prot) === false) return false;
+
+  // If constructor does not have an Object-specific method
+  if (prot.hasOwnProperty('isPrototypeOf') === false) {
+    return false;
+  }
+
+  // Most likely a plain Object
+  return true;
+}
+
+module.exports = isPlainObject;
 
 
 /***/ }),
@@ -9538,7 +9494,7 @@ function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'defau
 
 var endpoint = __webpack_require__(385);
 var universalUserAgent = __webpack_require__(796);
-var isPlainObject = _interopDefault(__webpack_require__(548));
+var isPlainObject = _interopDefault(__webpack_require__(696));
 var nodeFetch = _interopDefault(__webpack_require__(454));
 var requestError = __webpack_require__(463);
 
@@ -11268,7 +11224,7 @@ module.exports = __webpack_require__(141);
 
 const {Transform, PassThrough} = __webpack_require__(413);
 const zlib = __webpack_require__(761);
-const mimicResponse = __webpack_require__(89);
+const mimicResponse = __webpack_require__(537);
 
 module.exports = response => {
 	const contentEncoding = (response.headers['content-encoding'] || '').toLowerCase();
