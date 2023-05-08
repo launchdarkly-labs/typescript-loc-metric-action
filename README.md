@@ -37,8 +37,8 @@ You can test this action by updating the code under `./example`.
 Once you've made the changes you wanted, you can release a new version by following these steps:
 
 ```bash
-$ npm run build
-$ npm run package
+$ yarn build
+$ yarn package
 $ git add .
 $ git commit -m 'Commit message'
 ```
